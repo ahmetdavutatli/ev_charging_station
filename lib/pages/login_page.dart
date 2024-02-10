@@ -1,14 +1,12 @@
-import 'package:ev_charging_station/pages/home_page.dart';
 import 'package:flutter/material.dart';
 import '../auth.dart';
 import 'register_page.dart';
 import 'home_page.dart';
 
 class LoginPage extends StatelessWidget {
-
   final Auth auth;
 
-  LoginPage({super.key, required this.auth});
+  LoginPage({Key? key, required this.auth}) : super(key: key);
 
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -16,104 +14,117 @@ class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Login'),
-      ),
+      backgroundColor: Colors.black,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            // Add your logo here
+            Image.asset(
+              'assets/logo.png', // Replace with the actual path to your logo image
+              height: 100,
+              width: 100,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(height: 16),
             TextFormField(
               controller: emailController,
-              decoration: InputDecoration(labelText: 'Email',
-              filled: true,
-              fillColor: Color(0xff26B6E1),
-              border: OutlineInputBorder(
-                borderSide: BorderSide(color: Color(0xff26B6E1)),
-                borderRadius: BorderRadius.circular(10),
-              )),
+              style: TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: 'Email',
+                filled: true,
+                fillColor: Colors.green.withOpacity(0.2),
+                border: OutlineInputBorder(
+                  borderSide: BorderSide.none,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
               keyboardType: TextInputType.emailAddress,
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: passwordController,
+              style: TextStyle(color: Colors.white),
               decoration: InputDecoration(
-                  labelText: 'Password',
-                  filled: true,
-                  fillColor: Color(0xff26B6E1),
-                  border: OutlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xff26B6E1)),
-                    borderRadius: BorderRadius.circular(10),
-                  )
+                labelText: 'Password',
+                filled: true,
+                fillColor: Colors.green.withOpacity(0.2),
+                border: OutlineInputBorder(
+                  borderSide: BorderSide.none,
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
               obscureText: true,
             ),
             const SizedBox(height: 16),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xff26B6E1),
+                backgroundColor: Colors.green,
+                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
               onPressed: () async {
-                if (emailController.text.isEmpty || passwordController.text.isEmpty) {
-                  // Show an alert for empty email or password
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
+                  if(emailController.text.isEmpty || passwordController.text.isEmpty){
+                    showDialog(context: context,
+                        builder: (BuildContext context){
                       return AlertDialog(
-                        title: const Text('Error'),
-                        content: const Text('Please enter both email and password.'),
-                        actions: <Widget>[
+                        title: Text('Error'),
+                        content: Text('Please enter email and password'),
+                        actions: [
                           TextButton(
-                            onPressed: () {
-                              Navigator.of(context).pop();
+                            onPressed: (){
+                              Navigator.pop(context);
                             },
-                            child: const Text('OK'),
+                            child: Text('OK'),
                           ),
                         ],
                       );
                     },
-                  );
-                } else {
-                  try {
-                    await auth.signInWithEmailAndPassword(
-                      email: emailController.text,
-                      password: passwordController.text,
                     );
-                    // Navigate to the home page after successful login
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => HomePage(auth: auth,)),
-                    );
-                  } catch (e) {
-                    // Show an alert for invalid login
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
+                  }else{
+                    try {
+                      await auth.signInWithEmailAndPassword(
+                        email: emailController.text,
+                        password: passwordController.text,
+                      );
+                      // Navigate to the home page after successful login
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => HomePage(auth: auth),
+                        ),
+                      );
+                    } catch (e) {
+                      showDialog(context: context, builder: (BuildContext context){
                         return AlertDialog(
-                          title: const Text('Error'),
-                          content: const Text('Invalid email or password. Please try again.'),
-                          actions: <Widget>[
+                          title: Text('Error'),
+                          content: Text('Invalid email or password'),
+                          actions: [
                             TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
+                              onPressed: (){
+                                Navigator.pop(context);
                               },
-                              child: const Text('OK'),
+                              child: Text('OK'),
                             ),
                           ],
                         );
                       },
-                    );
-                    print('Login failed: $e');
+                      );
+                    }
                   }
-                }
               },
-              child: const Text('Login'),
+              child: const Text(
+                'Login',
+                style: TextStyle(fontSize: 16, color: Colors.white),
+              ),
             ),
             const SizedBox(height: 16),
             TextButton(
               style: TextButton.styleFrom(
-                backgroundColor: const Color(0xff26B6E1),
+                backgroundColor: Colors.transparent,
               ),
               onPressed: () {
                 // Navigate to the registration page
@@ -122,7 +133,10 @@ class LoginPage extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => RegisterPage(auth: auth)),
                 );
               },
-              child: const Text('Don\'t have an account? Register here.'),
+              child: Text(
+                "Don't have an account? Register here.",
+                style: TextStyle(color: Colors.green),
+              ),
             ),
           ],
         ),

@@ -39,7 +39,7 @@ class _ChargingPageState extends State<ChargingPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Charging Stations'),
-        backgroundColor: const Color(0xff26B6E1),
+        backgroundColor: Colors.green,
       ),
       body: ListView.builder(
         itemCount: _stations.length,

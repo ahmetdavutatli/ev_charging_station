@@ -15,34 +15,38 @@ class RegisterPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xff26B6E1),
-        title: const Text('Register'),
+        backgroundColor: Colors.black,
+        iconTheme: IconThemeData(
+          color: Colors.green,
+        ),
       ),
+      backgroundColor: Colors.black,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            TextFormField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: 'Name'),
+            // Add your logo here (you can reuse the widget from LoginPage)
+            Image.asset(
+              'assets/logo.png', // Replace with the actual path to your logo image
+              height: 100,
+              width: 100,
+              fit: BoxFit.contain,
             ),
             const SizedBox(height: 16),
-            TextFormField(
-              controller: emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
-              keyboardType: TextInputType.emailAddress,
-            ),
+            _buildTextField(nameController, 'Name'),
             const SizedBox(height: 16),
-            TextFormField(
-              controller: passwordController,
-              decoration: const InputDecoration(labelText: 'Password'),
-              obscureText: true,
-            ),
+            _buildTextField(emailController, 'Email', keyboardType: TextInputType.emailAddress),
+            const SizedBox(height: 16),
+            _buildTextField(passwordController, 'Password', obscureText: true),
             const SizedBox(height: 16),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xff26B6E1),
+                backgroundColor: Colors.green,
+                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
               onPressed: () async {
                 try {
@@ -69,13 +73,48 @@ class RegisterPage extends StatelessWidget {
                   );
                 }
               },
-              child: const Text('Register'),
+              child: Text('Register', style: TextStyle(fontSize: 16, color: Colors.white)),
             ),
             const SizedBox(height: 16),
-            // Rest of your code...
+            TextButton(
+              style: TextButton.styleFrom(
+                backgroundColor: const Color(0xFF1B5E20), // Dark Green Color
+              ),
+              onPressed: () {
+                // Navigate back to the login page
+                Navigator.pop(context);
+              },
+              child: Text('Already have an account? Login here.',
+                  style: TextStyle(color: Colors.green),
+              ),
+
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildTextField(
+      TextEditingController controller,
+      String label, {
+        TextInputType keyboardType = TextInputType.text,
+        bool obscureText = false,
+      }) {
+    return TextFormField(
+      controller: controller,
+      style: TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: Colors.green.withOpacity(0.2),
+        border: OutlineInputBorder(
+          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+      keyboardType: keyboardType,
+      obscureText: obscureText,
     );
   }
 }

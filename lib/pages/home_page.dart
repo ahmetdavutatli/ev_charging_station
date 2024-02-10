@@ -10,9 +10,8 @@ import 'my_cars_page.dart';
 import 'profile_page.dart';
 import '../auth.dart';
 import 'package:location/location.dart';
-import 'package:provider/provider.dart';  // Added import for Provider
-import '../charge_state.dart';  // Import your ChargeState class
-
+import 'package:provider/provider.dart';
+import '../charge_state.dart';
 
 class HomePage extends StatefulWidget {
   final Auth auth;
@@ -42,17 +41,17 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xff262930),
+      backgroundColor: Colors.black,
       body: _selectedIndex == 0
           ? const HomePageContent()
           : (_selectedIndex > 0 && _selectedIndex <= _pages.length)
-          ? _pages[_selectedIndex - 1]
-          : Container(
-        child: const Text('Invalid Page Selected'),
-      ),
+              ? _pages[_selectedIndex - 1]
+              : Container(
+                  child: const Text('Invalid Page Selected'),
+                ),
       bottomNavigationBar: CurvedNavigationBar(
         backgroundColor: const Color(0xff262930),
-        color: const Color(0xff26B6E1),
+        color: Colors.green,
         animationDuration: const Duration(milliseconds: 400),
         onTap: (index) {
           setState(() {
@@ -102,7 +101,6 @@ class _HomePageContentState extends State<HomePageContent> {
     _mapController = controller;
   }
 
-
   Future<void> _initializeMap() async {
     print('initializing map...');
     await _getLocation();
@@ -141,7 +139,8 @@ class _HomePageContentState extends State<HomePageContent> {
         target: LatLng(latitude, longitude),
         zoom: 15.0,
       );
-      _mapController?.animateCamera(CameraUpdate.newCameraPosition(_currentLocation));
+      _mapController
+          ?.animateCamera(CameraUpdate.newCameraPosition(_currentLocation));
     }
   }
 
@@ -159,7 +158,8 @@ class _HomePageContentState extends State<HomePageContent> {
         Marker userMarker = Marker(
           markerId: MarkerId("userMarker"),
           position: userLocation,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+          icon:
+              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
           infoWindow: InfoWindow(
             title: "Your Location",
             snippet: "You are here",
@@ -170,7 +170,8 @@ class _HomePageContentState extends State<HomePageContent> {
         // Load stations and add markers
         List<Station> stations = await _stationService.getStations();
         markers.addAll(stations.map((station) {
-          print('Station: ${station.name}, Lat: ${station.latitude}, Lng: ${station.longitude}');
+          print(
+              'Station: ${station.name}, Lat: ${station.latitude}, Lng: ${station.longitude}');
           return Marker(
             markerId: MarkerId(station.id),
             position: LatLng(station.latitude, station.longitude),
@@ -206,73 +207,72 @@ class _HomePageContentState extends State<HomePageContent> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Anasayfa'),
-        backgroundColor: const Color(0xff26B6E1),
-      ),
-      body: _isMapReady
-          ? Stack(
-        children: [
-          GoogleMap(
-            onMapCreated: (controller) {
-              _onMapCreated(controller);
-              _loadStations(); // Load stations after the map is created
-            },
-            mapType: MapType.normal,
-            initialCameraPosition: _initialCameraPosition,
-            zoomControlsEnabled: false,
-            compassEnabled: false,
-            markers: _markers,
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Align(
-              alignment: Alignment.topRight,
-              child: Column(
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Anasayfa'),
+          backgroundColor: Colors.green,
+          iconTheme: IconThemeData(
+              color: Colors.green), // Set the color of the back button
+        ),
+        body: _isMapReady
+            ? Stack(
                 children: [
-                  FloatingActionButton(
-                    heroTag: 'zoomIn',
-                    onPressed: () {
-                      _mapController?.animateCamera(
-                        CameraUpdate.zoomIn(),
-                      );
+                  GoogleMap(
+                    onMapCreated: (controller) {
+                      _onMapCreated(controller);
+                      _loadStations(); // Load stations after the map is created
                     },
-                    child: Icon(Icons.add),
-                    backgroundColor: const Color(0xff26B6E1),
+                    mapType: MapType.normal,
+                    initialCameraPosition: _initialCameraPosition,
+                    zoomControlsEnabled: false,
+                    compassEnabled: false,
+                    markers: _markers,
                   ),
-                  SizedBox(height: 16),
-                  FloatingActionButton(
-                    heroTag: 'zoomOut',
-                    onPressed: () {
-                      _mapController?.animateCamera(
-                        CameraUpdate.zoomOut(),
-                      );
-                    },
-                    child: Icon(Icons.remove),
-                    backgroundColor: const Color(0xff26B6E1),
-                  ),
-                  SizedBox(height: 16),
-                  FloatingActionButton(
-                    heroTag: 'location',
-                    onPressed: () {
-                      _getLocation();
-                    },
-                    child: Icon(Icons.my_location),
-                    backgroundColor: const Color(0xff26B6E1),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Align(
+                      alignment: Alignment.topRight,
+                      child: Column(
+                        children: [
+                          FloatingActionButton(
+                            heroTag: 'zoomIn',
+                            onPressed: () {
+                              _mapController?.animateCamera(
+                                CameraUpdate.zoomIn(),
+                              );
+                            },
+                            child: Icon(Icons.add),
+                            backgroundColor: Colors.green,
+                          ),
+                          SizedBox(height: 16),
+                          FloatingActionButton(
+                            heroTag: 'zoomOut',
+                            onPressed: () {
+                              _mapController?.animateCamera(
+                                CameraUpdate.zoomOut(),
+                              );
+                            },
+                            child: Icon(Icons.remove),
+                            backgroundColor: Colors.green,
+                          ),
+                          SizedBox(height: 16),
+                          FloatingActionButton(
+                            heroTag: 'location',
+                            onPressed: () {
+                              _getLocation();
+                            },
+                            child: Icon(Icons.my_location),
+                            backgroundColor: Colors.green,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
+              )
+            : Center(
+                child: CircularProgressIndicator(),
               ),
-            ),
-          ),
-        ],
-      )
-          : Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
+      );
   }
 }
-
-
-
