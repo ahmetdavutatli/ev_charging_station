@@ -22,7 +22,7 @@ class LoginPage extends StatelessWidget {
           children: <Widget>[
             // Add your logo here
             Image.asset(
-              'assets/logo.png', // Replace with the actual path to your logo image
+              'assets/logo.png',
               height: 100,
               width: 100,
               fit: BoxFit.contain,
@@ -58,30 +58,47 @@ class LoginPage extends StatelessWidget {
               obscureText: true,
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-                shape: RoundedRectangleBorder(
+            MaterialButton(
+              child: Ink(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green, Colors.lightGreen],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
                   borderRadius: BorderRadius.circular(10),
+                ),
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 200, minHeight: 50),
+                  alignment: Alignment.center,
+                  child: const Text(
+                    'Login',
+                    style: TextStyle(fontSize: 16, color: Colors.white),
+                  ),
                 ),
               ),
               onPressed: () async {
                   if(emailController.text.isEmpty || passwordController.text.isEmpty){
                     showDialog(context: context,
                         builder: (BuildContext context){
-                      return AlertDialog(
-                        title: Text('Error'),
-                        content: Text('Please enter email and password'),
-                        actions: [
-                          TextButton(
-                            onPressed: (){
-                              Navigator.pop(context);
-                            },
-                            child: Text('OK'),
+                      return Theme(
+                        data: ThemeData( dialogBackgroundColor: Colors.black,),
+                        child: AlertDialog(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                        ],
-                      );
+                          title: Text('Error', style: TextStyle(color: Colors.green),),
+                          content: Text('Please enter email and password', style: TextStyle(color: Colors.green),),
+                          actions: <Widget> [
+                            TextButton(
+                              onPressed: (){
+                                Navigator.pop(context);
+                              },
+                              child: Text('OK', style: TextStyle(color: Colors.green),),
+                            ),
+                          ],
+                        ),
+                        );
                     },
                     );
                   }else{
@@ -90,7 +107,7 @@ class LoginPage extends StatelessWidget {
                         email: emailController.text,
                         password: passwordController.text,
                       );
-                      // Navigate to the home page after successful login
+                      // Navigate to the home page after login
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
@@ -116,10 +133,7 @@ class LoginPage extends StatelessWidget {
                     }
                   }
               },
-              child: const Text(
-                'Login',
-                style: TextStyle(fontSize: 16, color: Colors.white),
-              ),
+
             ),
             const SizedBox(height: 16),
             TextButton(

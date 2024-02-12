@@ -153,7 +153,6 @@ class _ChargingDetailsPageState extends State<ChargingDetailsPage> {
       _selectedCarIndex = index;
       _chargingStarted = true;
 
-      // Start the charging timer
       _chargingTimer = Timer.periodic(Duration(seconds: 5), (timer) {
         if (mounted) {
           setState(() {
@@ -180,7 +179,6 @@ class _ChargingDetailsPageState extends State<ChargingDetailsPage> {
 
   @override
   void dispose() {
-    // Ensure that _chargingTimer is canceled before disposing
     _chargingTimer?.cancel();
     super.dispose();
   }

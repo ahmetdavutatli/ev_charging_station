@@ -37,7 +37,6 @@ class _ProfilePageState extends State<ProfilePage> {
       _userName = userDocument['name'] ?? 'Unknown';
       setState(() {});
     } catch (e) {
-      // Handle error (show error message, etc.)
       print('Error loading user name: $e');
     }
   }
@@ -54,7 +53,6 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Current User's Name
             Text(
               'Hello, $_userName!',
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
@@ -74,7 +72,6 @@ class _ProfilePageState extends State<ProfilePage> {
               },
             ),
 
-            // Divider
             const Divider(height: 20, color: const Color(0xff26B6E1)),
 
             // Wallet Section
@@ -89,7 +86,6 @@ class _ProfilePageState extends State<ProfilePage> {
               },
             ),
 
-            // Divider
             const Divider(height: 20, color: const Color(0xff26B6E1)),
 
             // Transactions Section
@@ -107,7 +103,6 @@ class _ProfilePageState extends State<ProfilePage> {
           ],
         ),
       ),
-      // Logout Button at the Bottom
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(16.0),
         child: _buildLogoutButton(),

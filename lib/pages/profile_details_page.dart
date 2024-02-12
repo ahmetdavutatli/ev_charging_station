@@ -43,7 +43,6 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
       _emailController.text = email;
 
     } catch (e) {
-      // Handle error
       print('Error loading user data: $e');
     }
   }
@@ -52,9 +51,6 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
     try {
       // Validate and update user data in Firestore
       if (_passwordController.text.isNotEmpty) {
-        // Check the password before updating
-        // You may want to implement additional security measures here
-        // For simplicity, this example only checks if the password is not empty
         await widget.auth.signInWithEmailAndPassword(
           email: widget.auth.user?.email ?? '',
           password: _passwordController.text,
@@ -66,14 +62,11 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
           'email': _emailController.text,
         });
 
-        // Display a success message
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('User data updated successfully!')));
       } else {
-        // Display an error message if the password is empty
         _showPasswordErrorAlert('Please enter your password to update user data.');
       }
     } catch (e) {
-      // Handle authentication errors
       print('Error updating user data: $e');
 
       // Check if the error is a FirebaseAuthException
@@ -84,15 +77,9 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
           // Display an error message for an incorrect credential
           _showPasswordErrorAlert('Invalid password. Please try again.');
         } else {
-          // Handle other authentication errors
-          // ...
-
-          // Display a generic error message
           _showPasswordErrorAlert('Error updating user data. Please try again.');
         }
       } else {
-        // Handle other errors (not related to FirebaseAuthException)
-        // Display a generic error message
         _showPasswordErrorAlert('Error updating user data. Please try again.');
       }
     }

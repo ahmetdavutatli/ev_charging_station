@@ -26,7 +26,6 @@ class _MyCarsPageState extends State<MyCarsPage> {
   void initState() {
     super.initState();
     _loadUserCars();
-    // Start the timer when the page is loaded
     _startTimer();
   }
 
@@ -59,7 +58,6 @@ class _MyCarsPageState extends State<MyCarsPage> {
     String? userId = FirebaseAuth.instance.currentUser?.uid;
 
     if (userId != null) {
-      // Reference to the user document in Firestore
       DocumentReference userRef = FirebaseFirestore.instance.collection('users').doc(userId);
 
       // Get the user document

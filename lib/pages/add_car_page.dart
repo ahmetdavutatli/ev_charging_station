@@ -7,7 +7,6 @@ import '../models/car_model.dart';
 import '../services/car_services.dart';
 
 class AddCarPage extends StatefulWidget {
-  // Your existing properties here
 
   @override
   _AddCarPageState createState() => _AddCarPageState();
@@ -55,7 +54,6 @@ class _AddCarPageState extends State<AddCarPage> {
                   backgroundColor: const Color(0xff26B6E1),
                 ),
                 onPressed: () {
-                  // Handle selecting the car and adding it to the user's profile
                   _addCarToUserProfile(_cars[index]);
                 },
                 child: Text('Select Car'),
@@ -76,9 +74,6 @@ class _AddCarPageState extends State<AddCarPage> {
       User? user = FirebaseAuth.instance.currentUser;
 
       if (user != null) {
-        // Update the user's document in Firestore with the selected car information
-        // Assuming you have a 'cars' field in the user's document
-        // where you store the selected cars as a list of maps
         await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
           'cars': FieldValue.arrayUnion([
             {
@@ -89,7 +84,6 @@ class _AddCarPageState extends State<AddCarPage> {
           ]),
         });
 
-        // Inform the user that the car has been added
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Car ${selectedCar.carName} added to your profile.'),
@@ -98,7 +92,6 @@ class _AddCarPageState extends State<AddCarPage> {
       }
     } catch (e) {
       print('Error adding car to user profile: $e');
-      // Handle error if necessary
     }
   }
 }

@@ -26,9 +26,8 @@ class RegisterPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            // Add your logo here (you can reuse the widget from LoginPage)
             Image.asset(
-              'assets/logo.png', // Replace with the actual path to your logo image
+              'assets/logo.png',
               height: 100,
               width: 100,
               fit: BoxFit.contain,
@@ -40,12 +39,27 @@ class RegisterPage extends StatelessWidget {
             const SizedBox(height: 16),
             _buildTextField(passwordController, 'Password', obscureText: true),
             const SizedBox(height: 16),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-                shape: RoundedRectangleBorder(
+            MaterialButton(
+              child: Ink(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green, Colors.lightGreen],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
                   borderRadius: BorderRadius.circular(10),
+                ),
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: 200.0,
+                    minHeight: 50.0,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    "Register",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ),
               onPressed: () async {
@@ -55,7 +69,6 @@ class RegisterPage extends StatelessWidget {
                     email: emailController.text,
                     password: passwordController.text,
                   );
-                  // Navigate to the home page after successful registration
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
@@ -63,9 +76,7 @@ class RegisterPage extends StatelessWidget {
                     ),
                   );
                 } catch (e) {
-                  // Handle registration failure (show error message, etc.)
                   print('Registration failed: $e');
-                  // Show a snackbar with the error message
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Registration failed: $e'),
@@ -73,15 +84,12 @@ class RegisterPage extends StatelessWidget {
                   );
                 }
               },
-              child: Text('Register', style: TextStyle(fontSize: 16, color: Colors.white)),
             ),
             const SizedBox(height: 16),
             TextButton(
               style: TextButton.styleFrom(
-                backgroundColor: const Color(0xFF1B5E20), // Dark Green Color
               ),
               onPressed: () {
-                // Navigate back to the login page
                 Navigator.pop(context);
               },
               child: Text('Already have an account? Login here.',

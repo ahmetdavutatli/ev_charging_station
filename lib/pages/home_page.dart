@@ -14,6 +14,7 @@ import 'package:provider/provider.dart';
 import '../charge_state.dart';
 
 class HomePage extends StatefulWidget {
+
   final Auth auth;
 
   const HomePage({Key? key, required this.auth}) : super(key: key);
@@ -77,14 +78,20 @@ class HomePageContent extends StatefulWidget {
 
   @override
   _HomePageContentState createState() => _HomePageContentState();
+
 }
+
+
 
 class _HomePageContentState extends State<HomePageContent> {
   GoogleMapController? _mapController;
   bool _isMapReady = false;
   Location _location = Location();
   StationService _stationService = StationService();
+  BitmapDescriptor markerIconStation = BitmapDescriptor.defaultMarker;
   Set<Marker> _markers = <Marker>{};
+
+
 
   static final CameraPosition _initialCameraPosition = CameraPosition(
     target: LatLng(39.9334, 32.8597),
@@ -95,6 +102,16 @@ class _HomePageContentState extends State<HomePageContent> {
   void initState() {
     super.initState();
     _initializeMap();
+    _loadCustomMarker();
+  }
+
+
+
+  Future<void> _loadCustomMarker() async {
+    markerIconStation = await BitmapDescriptor.fromAssetImage(
+      const ImageConfiguration(devicePixelRatio: 2.5),
+      'assets/markerIconStation.png',
+    ).then((icon) => markerIconStation = icon);
   }
 
   void _onMapCreated(GoogleMapController controller) {
@@ -144,6 +161,8 @@ class _HomePageContentState extends State<HomePageContent> {
     }
   }
 
+
+
   Future<void> _loadStations() async {
     try {
       if (_mapController != null) {
@@ -151,7 +170,6 @@ class _HomePageContentState extends State<HomePageContent> {
         var location = await _location.getLocation();
         LatLng userLocation = LatLng(location.latitude!, location.longitude!);
 
-        // Create a list to store markers
         List<Marker> markers = [];
 
         // Add user's marker
@@ -159,7 +177,7 @@ class _HomePageContentState extends State<HomePageContent> {
           markerId: MarkerId("userMarker"),
           position: userLocation,
           icon:
-              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+             BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
           infoWindow: InfoWindow(
             title: "Your Location",
             snippet: "You are here",
@@ -207,72 +225,71 @@ class _HomePageContentState extends State<HomePageContent> {
 
   @override
   Widget build(BuildContext context) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('Anasayfa'),
-          backgroundColor: Colors.green,
-          iconTheme: IconThemeData(
-              color: Colors.green), // Set the color of the back button
-        ),
-        body: _isMapReady
-            ? Stack(
-                children: [
-                  GoogleMap(
-                    onMapCreated: (controller) {
-                      _onMapCreated(controller);
-                      _loadStations(); // Load stations after the map is created
-                    },
-                    mapType: MapType.normal,
-                    initialCameraPosition: _initialCameraPosition,
-                    zoomControlsEnabled: false,
-                    compassEnabled: false,
-                    markers: _markers,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Align(
-                      alignment: Alignment.topRight,
-                      child: Column(
-                        children: [
-                          FloatingActionButton(
-                            heroTag: 'zoomIn',
-                            onPressed: () {
-                              _mapController?.animateCamera(
-                                CameraUpdate.zoomIn(),
-                              );
-                            },
-                            child: Icon(Icons.add),
-                            backgroundColor: Colors.green,
-                          ),
-                          SizedBox(height: 16),
-                          FloatingActionButton(
-                            heroTag: 'zoomOut',
-                            onPressed: () {
-                              _mapController?.animateCamera(
-                                CameraUpdate.zoomOut(),
-                              );
-                            },
-                            child: Icon(Icons.remove),
-                            backgroundColor: Colors.green,
-                          ),
-                          SizedBox(height: 16),
-                          FloatingActionButton(
-                            heroTag: 'location',
-                            onPressed: () {
-                              _getLocation();
-                            },
-                            child: Icon(Icons.my_location),
-                            backgroundColor: Colors.green,
-                          ),
-                        ],
-                      ),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Anasayfa'),
+        backgroundColor: Colors.green,
+        iconTheme: IconThemeData(color: Colors.green),
+      ),
+      body: _isMapReady
+          ? Stack(
+              children: [
+                GoogleMap(
+                  onMapCreated: (controller) {
+                    _onMapCreated(controller);
+                    _loadStations();
+                  },
+                  mapType: MapType.normal,
+                  initialCameraPosition: _initialCameraPosition,
+                  zoomControlsEnabled: false,
+                  compassEnabled: false,
+                  markers: _markers,
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Align(
+                    alignment: Alignment.topRight,
+                    child: Column(
+                      children: [
+                        FloatingActionButton(
+                          heroTag: 'zoomIn',
+                          onPressed: () {
+                            _mapController?.animateCamera(
+                              CameraUpdate.zoomIn(),
+                            );
+                          },
+                          child: Icon(Icons.add),
+                          backgroundColor: Colors.green,
+                        ),
+                        SizedBox(height: 16),
+                        FloatingActionButton(
+                          heroTag: 'zoomOut',
+                          onPressed: () {
+                            _mapController?.animateCamera(
+                              CameraUpdate.zoomOut(),
+                            );
+                          },
+                          child: Icon(Icons.remove),
+                          backgroundColor: Colors.green,
+                        ),
+                        SizedBox(height: 16),
+                        FloatingActionButton(
+                          heroTag: 'location',
+                          onPressed: () {
+                            _getLocation();
+                          },
+                          child: Icon(Icons.my_location),
+                          backgroundColor: Colors.green,
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              )
-            : Center(
-                child: CircularProgressIndicator(),
-              ),
-      );
+                ),
+              ],
+            )
+          : Center(
+              child: CircularProgressIndicator(),
+            ),
+    );
   }
 }
