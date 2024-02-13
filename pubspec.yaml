@@ -44,6 +44,7 @@ dependencies:
   location: ^5.0.3
   qr_code_scanner: ^1.0.1
   provider: ^6.1.1
+  flutter_image_compress: ^2.1.0
 
 dev_dependencies:
   flutter_test:
@@ -64,7 +65,8 @@ flutter:
 
   assets:
     - assets/logo.png
-    - assets/markerIconStation.png
+    - assets/station_marker.png
+    - assets/user_marker.png
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

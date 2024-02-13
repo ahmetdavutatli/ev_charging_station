@@ -13,6 +13,10 @@ class WalletPage extends StatefulWidget {
 }
 
 class _WalletPageState extends State<WalletPage> {
+  double usdToEurRate = 0.92; // Örnek döviz kuru
+  double usdToTryRate = 13.5; // Örnek döviz kuru
+  double usdToBtcRate = 0.000022; // Örnek döviz kuru
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,53 +29,102 @@ class _WalletPageState extends State<WalletPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Display current balance
             FutureBuilder<double>(
-              future: _loadBalance(),
+              future: _loadUsdBalance(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  // If the Future is still running, show a loading indicator
-                  return CircularProgressIndicator();
+                  return const Center(child: CircularProgressIndicator());
                 } else if (snapshot.hasError) {
-                  // If the Future completes with an error, display the error message
-                  return Text('Error: ${snapshot.error}');
+                  return Center(child: Text('Error: ${snapshot.error}'));
                 } else {
-                  // If the Future is complete, display the current balance
-                  double currentBalance = snapshot.data ?? 0.0;
-                  return Text(
-                    'Current Balance: \$${currentBalance.toStringAsFixed(2)}',
-                    style: const TextStyle(fontSize: 20),
-                  );
+                  double usdBalance = snapshot.data ?? 0.0;
+                  return _buildBalanceDisplay(usdBalance);
                 }
               },
             ),
-
             const SizedBox(height: 20),
-
-            // Button to add funds
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xff26B6E1),
-              ),
-              onPressed: () {
-                // Show a dialog or navigate to a page where the user can input the amount to add
-                _showAddFundsDialog(context);
-              },
-              child: Text('Add Funds'),
-            ),
+            _buildAddFundsButton(),
           ],
         ),
       ),
     );
   }
 
-  Future<double> _loadBalance() async {
+  Widget _buildBalanceDisplay(double usdBalance) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildMainBalanceRow('USD', usdBalance, Icons.attach_money, 30.0),
+        const SizedBox(height: 8),
+        _buildSecondaryBalance(
+            'EUR', usdBalance * usdToEurRate, Icons.euro_symbol),
+        _buildSecondaryBalance(
+            'TRY', usdBalance * usdToTryRate, Icons.currency_lira),
+        _buildSecondaryBalance(
+            'BTC', usdBalance * usdToBtcRate, Icons.currency_bitcoin),
+      ],
+    );
+  }
+
+  Widget _buildMainBalanceRow(String currency, double balance,
+      IconData iconData, double iconSize) {
+    return ListTile(
+      leading: CircleAvatar(
+        radius: 25.0,
+        backgroundColor: const Color(0xff26B6E1),
+        child: Icon(iconData, size: iconSize, color: Colors.white),
+      ),
+      title: Text(
+        '$currency: \$${balance.toStringAsFixed(2)}',
+        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  Widget _buildSecondaryBalance(String currency, double balance,
+      IconData iconData) {
+    String formattedBalance = currency == 'BTC'
+        ? balance.toStringAsFixed(8)
+        : balance.toStringAsFixed(2);
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8.0),
+      child: Row(
+        children: [
+          Icon(iconData, color: const Color(0xff26B6E1)),
+          const SizedBox(width: 8),
+          Text(
+            '$currency: \$${formattedBalance}',
+            style: const TextStyle(fontSize: 16, color: Colors.black54),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddFundsButton() {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        primary: const Color(0xff26B6E1),
+        onPrimary: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+        padding: const EdgeInsets.symmetric(vertical: 16.0),
+      ),
+      onPressed: () => _showAddFundsDialog(context),
+      child: const Text('Add Funds', style: TextStyle(fontSize: 18)),
+    );
+  }
+
+  Future<double> _loadUsdBalance() async {
     if (widget.auth.user != null) {
-      return await widget.walletService.getBalance();
+      try {
+        return await widget.walletService.getBalance();
+      } catch (e) {
+        print('Error loading balance: $e');
+        return 0.0;
+      }
     } else {
-      // Handle the case where the user is not authenticated
-      // You might want to show a login screen or redirect to the login page
-      return 0.0;
+      return 0.0; // Kullanıcı giriş yapmamışsa 0 döndür
     }
   }
 
@@ -82,7 +135,7 @@ class _WalletPageState extends State<WalletPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Add Funds'),
+          title: const Text('Add Funds'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -91,7 +144,7 @@ class _WalletPageState extends State<WalletPage> {
                 onChanged: (value) {
                   amountToAdd = double.tryParse(value) ?? 0.0;
                 },
-                decoration: InputDecoration(labelText: 'Amount'),
+                decoration: const InputDecoration(labelText: 'Amount'),
               ),
               const SizedBox(height: 20),
               ElevatedButton(
@@ -101,7 +154,14 @@ class _WalletPageState extends State<WalletPage> {
                   setState(() {});
                   Navigator.pop(context); // Close the dialog
                 },
-                child: Text('Add'),
+                style: ElevatedButton.styleFrom(
+                  primary: const Color(0xff26B6E1),
+                  onPrimary: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0)),
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                ),
+                child: const Text('Add', style: TextStyle(fontSize: 18)),
               ),
             ],
           ),

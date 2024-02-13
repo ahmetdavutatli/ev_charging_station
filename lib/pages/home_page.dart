@@ -1,6 +1,8 @@
+import 'dart:typed_data';
 import 'package:ev_charging_station/services/station_services.dart';
 import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
+import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:async';
 import '../models/station_model.dart';
@@ -10,6 +12,8 @@ import 'my_cars_page.dart';
 import 'profile_page.dart';
 import '../auth.dart';
 import 'package:location/location.dart';
+import 'dart:ui' as ui;
+import '../navbar.dart';
 import 'package:provider/provider.dart';
 import '../charge_state.dart';
 
@@ -24,18 +28,18 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _selectedIndex = 0;
+  int _selectedIndex = 1;
   late List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
 
+    // Adjusting the page list based on the items you want to keep
     _pages = [
-      const TransactionPage(),
       ChargingPage(stationService: StationService()),
+      const HomePageContent(),
       MyCarsPage(),
-      ProfilePage(auth: widget.auth),
     ];
   }
 
@@ -43,33 +47,35 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: _selectedIndex == 0
-          ? const HomePageContent()
-          : (_selectedIndex > 0 && _selectedIndex <= _pages.length)
-              ? _pages[_selectedIndex - 1]
-              : Container(
-                  child: const Text('Invalid Page Selected'),
-                ),
+      body: _selectedIndex < _pages.length
+          ? _pages[_selectedIndex]
+          : Container(
+        child: const Text('Invalid Page Selected'),
+      ),
       bottomNavigationBar: CurvedNavigationBar(
         backgroundColor: const Color(0xff262930),
         color: Colors.green,
         animationDuration: const Duration(milliseconds: 400),
         onTap: (index) {
           setState(() {
+            // Adjusting the selected index
             _selectedIndex = index;
           });
         },
-        items: const [
-          Icon(Icons.home, size: 30),
-          Icon(Icons.access_time_filled, size: 30),
+        items: [
+          // Update the order of icons accordingly
           Icon(Icons.flash_on, size: 30),
+          Icon(Icons.home, size: 30),
           Icon(Icons.directions_car_filled_sharp, size: 30),
-          Icon(Icons.account_circle, size: 30),
         ],
+        index: _selectedIndex,
       ),
     );
   }
 }
+
+
+
 
 class HomePageContent extends StatefulWidget {
   final Station? focusedStation;
@@ -89,6 +95,7 @@ class _HomePageContentState extends State<HomePageContent> {
   Location _location = Location();
   StationService _stationService = StationService();
   BitmapDescriptor markerIconStation = BitmapDescriptor.defaultMarker;
+  BitmapDescriptor markerIconUser = BitmapDescriptor.defaultMarker;
   Set<Marker> _markers = <Marker>{};
 
 
@@ -102,17 +109,45 @@ class _HomePageContentState extends State<HomePageContent> {
   void initState() {
     super.initState();
     _initializeMap();
-    _loadCustomMarker();
+    _loadStationMarker();
+    _loadUserMarker();
+  }
+
+  Future<BitmapDescriptor> _resizeImage(Uint8List bytes, double newSize) async {
+    final ui.Codec markerImageCodec = await ui.instantiateImageCodec(
+      bytes,
+      targetHeight: newSize.toInt(),
+    );
+
+    final ui.FrameInfo frameInfo = await markerImageCodec.getNextFrame();
+    final ByteData? resizedByteData = await frameInfo.image.toByteData(
+      format: ui.ImageByteFormat.png,
+    );
+
+    return BitmapDescriptor.fromBytes(resizedByteData!.buffer.asUint8List());
   }
 
 
 
-  Future<void> _loadCustomMarker() async {
-    markerIconStation = await BitmapDescriptor.fromAssetImage(
-      const ImageConfiguration(devicePixelRatio: 2.5),
-      'assets/markerIconStation.png',
-    ).then((icon) => markerIconStation = icon);
+  Future<void> _loadStationMarker() async {
+    final ByteData data = await rootBundle.load('assets/station_marker.png');
+    final Uint8List bytes = data.buffer.asUint8List();
+
+    // Resize the marker icon
+    double newSize = 300.0; // Adjust the size as needed
+    markerIconStation = await _resizeImage(bytes, newSize);
   }
+
+  Future<void> _loadUserMarker() async {
+    final ByteData data = await rootBundle.load('assets/user_marker.png');
+    final Uint8List bytes = data.buffer.asUint8List();
+
+    // Resize the marker icon
+    double newSize = 150.0; // Adjust the size as needed
+    markerIconUser = await _resizeImage(bytes, newSize);
+  }
+
+
 
   void _onMapCreated(GoogleMapController controller) {
     _mapController = controller;
@@ -161,135 +196,182 @@ class _HomePageContentState extends State<HomePageContent> {
     }
   }
 
+  void _showBottomSheet({required Station station}) {
+    showModalBottomSheet(
+      backgroundColor: Colors.green,
+      context: context,
+      builder: (context) => BottomSheet(
+        onClosing: () {},
+        builder: (context) => Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.black,Colors.black,Colors.black54],
+              begin: Alignment.topCenter,
+              end: Alignment.center,
+            ),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          height: 250,
+          width: double.infinity,
+          child: Column(
+            children: [
+              Text('Şarj İstasyonu Bilgileri', style: TextStyle(fontSize: 20, color: Colors.white)),
+              Text('Adı: ${station.name}', style: TextStyle(fontSize: 20, color: Colors.white)),
+              Text('Konumu: ${station.latitude}, ${station.longitude}', style: TextStyle(fontSize: 20, color: Colors.white)),
+              // ... diğer bilgiler
+
+              MaterialButton(
+                child: Ink(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.green, Colors.lightGreen],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 200, minHeight: 50),
+                    alignment: Alignment.center,
+                    child: const Text(
+                      'Rezervasyon Yap',
+                      style: TextStyle(fontSize: 16, color: Colors.white),
+                    ),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ChargingDetailsPage(station: station),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+
+        ),
+      ),
+    );
+  }
 
 
   Future<void> _loadStations() async {
-    try {
-      if (_mapController != null) {
-        // Get user's current location
-        var location = await _location.getLocation();
-        LatLng userLocation = LatLng(location.latitude!, location.longitude!);
-
-        List<Marker> markers = [];
-
-        // Add user's marker
-        Marker userMarker = Marker(
-          markerId: MarkerId("userMarker"),
-          position: userLocation,
-          icon:
-             BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-          infoWindow: InfoWindow(
-            title: "Your Location",
-            snippet: "You are here",
-          ),
-        );
-        markers.add(userMarker);
-
-        // Load stations and add markers
-        List<Station> stations = await _stationService.getStations();
-        markers.addAll(stations.map((station) {
-          print(
-              'Station: ${station.name}, Lat: ${station.latitude}, Lng: ${station.longitude}');
-          return Marker(
-            markerId: MarkerId(station.id),
-            position: LatLng(station.latitude, station.longitude),
-            infoWindow: InfoWindow(
-              title: station.name,
-              snippet: 'Tap for details',
-            ),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ChargingDetailsPage(station: station),
-                ),
-              );
-            },
-          );
-        }));
-
-        if (mounted) {
-          setState(() {
-            _markers.clear();
-            _markers.addAll(markers);
-          });
-        }
-      } else {
-        print('Error: _mapController is null. Cannot load stations.');
-      }
-    } catch (e) {
-      print('Error getting stations: $e');
+    // _mapController kontrolü
+    if (_mapController == null) {
+      print('Error: _mapController is null. Cannot load stations.');
+      return;
     }
-    print('loading stations...');
+
+    // Get user's current location
+    var location = await _location.getLocation();
+    LatLng userLocation = LatLng(location.latitude!, location.longitude!);
+
+
+    List<Marker> markers = [];
+
+    Marker userMarker = Marker(
+      markerId: MarkerId("userMarker"),
+      position: userLocation,
+      icon: markerIconUser,
+      infoWindow: InfoWindow(
+        title: "Your Location",
+        snippet: "You are here",
+      ),
+    );
+    markers.add(userMarker);
+
+
+    // Marker'ları oluştur
+    List<Station> stations = await _stationService.getStations();
+    markers.addAll(stations.map((station) {
+      return Marker(
+        markerId: MarkerId(station.id),
+        position: LatLng(station.latitude, station.longitude),
+        icon: markerIconStation,
+        onTap: () => _showBottomSheet(station: station),
+      );
+    }));
+
+    // Marker'ları güncelle
+    setState(() {
+      _markers.addAll(markers);
+    });
   }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: NavBar(auth: Auth(),),
       appBar: AppBar(
         title: const Text('Anasayfa'),
         backgroundColor: Colors.green,
-        iconTheme: IconThemeData(color: Colors.green),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: _isMapReady
           ? Stack(
-              children: [
-                GoogleMap(
-                  onMapCreated: (controller) {
-                    _onMapCreated(controller);
-                    _loadStations();
-                  },
-                  mapType: MapType.normal,
-                  initialCameraPosition: _initialCameraPosition,
-                  zoomControlsEnabled: false,
-                  compassEnabled: false,
-                  markers: _markers,
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Align(
-                    alignment: Alignment.topRight,
-                    child: Column(
-                      children: [
-                        FloatingActionButton(
-                          heroTag: 'zoomIn',
-                          onPressed: () {
-                            _mapController?.animateCamera(
-                              CameraUpdate.zoomIn(),
-                            );
-                          },
-                          child: Icon(Icons.add),
-                          backgroundColor: Colors.green,
-                        ),
-                        SizedBox(height: 16),
-                        FloatingActionButton(
-                          heroTag: 'zoomOut',
-                          onPressed: () {
-                            _mapController?.animateCamera(
-                              CameraUpdate.zoomOut(),
-                            );
-                          },
-                          child: Icon(Icons.remove),
-                          backgroundColor: Colors.green,
-                        ),
-                        SizedBox(height: 16),
-                        FloatingActionButton(
-                          heroTag: 'location',
-                          onPressed: () {
-                            _getLocation();
-                          },
-                          child: Icon(Icons.my_location),
-                          backgroundColor: Colors.green,
-                        ),
-                      ],
-                    ),
+        children: [
+          GoogleMap(
+            onMapCreated: (controller) {
+              _onMapCreated(controller);
+              _loadStations();
+            },
+            mapType: MapType.normal,
+            initialCameraPosition: _initialCameraPosition,
+            zoomControlsEnabled: false,
+            compassEnabled: false,
+            markers: _markers,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Align(
+              alignment: Alignment.topRight,
+              child: Column(
+                children: [
+                  FloatingActionButton(
+                    heroTag: 'zoomIn',
+                    onPressed: () {
+                      _mapController?.animateCamera(
+                        CameraUpdate.zoomIn(),
+                      );
+                    },
+                    child: Icon(Icons.add),
+                    backgroundColor: Colors.green,
                   ),
-                ),
-              ],
-            )
-          : Center(
-              child: CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  FloatingActionButton(
+                    heroTag: 'zoomOut',
+                    onPressed: () {
+                      _mapController?.animateCamera(
+                        CameraUpdate.zoomOut(),
+                      );
+                    },
+                    child: Icon(Icons.remove),
+                    backgroundColor: Colors.green,
+                  ),
+                  SizedBox(height: 16),
+                  FloatingActionButton(
+                    heroTag: 'location',
+                    onPressed: () {
+                      _getLocation();
+                    },
+                    child: Icon(Icons.my_location),
+                    backgroundColor: Colors.green,
+                  ),
+                ],
+              ),
             ),
+          ),
+        ],
+      )
+          : Center(
+        child: CircularProgressIndicator(),
+      ),
     );
   }
 }
