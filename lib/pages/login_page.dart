@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../auth.dart';
 import 'register_page.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'home_page.dart';
 
 class LoginPage extends StatelessWidget {
@@ -32,7 +33,7 @@ class LoginPage extends StatelessWidget {
               controller: emailController,
               style: TextStyle(color: Colors.white),
               decoration: InputDecoration(
-                labelText: 'Email',
+                labelText: AppLocalizations.of(context)!.email,
                 filled: true,
                 fillColor: Colors.green.withOpacity(0.2),
                 border: OutlineInputBorder(
@@ -47,7 +48,7 @@ class LoginPage extends StatelessWidget {
               controller: passwordController,
               style: TextStyle(color: Colors.white),
               decoration: InputDecoration(
-                labelText: 'Password',
+                labelText: AppLocalizations.of(context)!.password,
                 filled: true,
                 fillColor: Colors.green.withOpacity(0.2),
                 border: OutlineInputBorder(
@@ -71,8 +72,8 @@ class LoginPage extends StatelessWidget {
                 child: Container(
                   constraints: const BoxConstraints(maxWidth: 200, minHeight: 50),
                   alignment: Alignment.center,
-                  child: const Text(
-                    'Login',
+                  child:  Text(
+                    AppLocalizations.of(context)!.login,
                     style: TextStyle(fontSize: 16, color: Colors.white),
                   ),
                 ),
@@ -87,14 +88,14 @@ class LoginPage extends StatelessWidget {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          title: Text('Error', style: TextStyle(color: Colors.green),),
-                          content: Text('Please enter email and password', style: TextStyle(color: Colors.green),),
+                          title: Text(AppLocalizations.of(context)!.error, style: TextStyle(color: Colors.green),),
+                          content: Text(AppLocalizations.of(context)!.emptyCheck, style: TextStyle(color: Colors.green),),
                           actions: <Widget> [
                             TextButton(
                               onPressed: (){
                                 Navigator.pop(context);
                               },
-                              child: Text('OK', style: TextStyle(color: Colors.green),),
+                              child: Text(AppLocalizations.of(context)!.ok, style: TextStyle(color: Colors.green),),
                             ),
                           ],
                         ),
@@ -117,14 +118,14 @@ class LoginPage extends StatelessWidget {
                     } catch (e) {
                       showDialog(context: context, builder: (BuildContext context){
                         return AlertDialog(
-                          title: Text('Error'),
-                          content: Text('Invalid email or password'),
+                          title: Text(AppLocalizations.of(context)!.error),
+                          content: Text(AppLocalizations.of(context)!.invalidCheck),
                           actions: [
                             TextButton(
                               onPressed: (){
                                 Navigator.pop(context);
                               },
-                              child: Text('OK'),
+                              child: Text(AppLocalizations.of(context)!.ok),
                             ),
                           ],
                         );
@@ -148,7 +149,7 @@ class LoginPage extends StatelessWidget {
                 );
               },
               child: Text(
-                "Don't have an account? Register here.",
+                AppLocalizations.of(context)!.navigateRegister,
                 style: TextStyle(color: Colors.green),
               ),
             ),

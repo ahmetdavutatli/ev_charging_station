@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../auth.dart';
 import '../services/wallet_services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 
 class WalletPage extends StatefulWidget {
   final Auth auth;
@@ -21,7 +23,6 @@ class _WalletPageState extends State<WalletPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Wallet'),
         backgroundColor: const Color(0xff26B6E1),
       ),
       body: Padding(
@@ -35,7 +36,7 @@ class _WalletPageState extends State<WalletPage> {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 } else if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
+                  return Center(child: Text('${AppLocalizations.of(context)!.error}: ${snapshot.error}'));
                 } else {
                   double usdBalance = snapshot.data ?? 0.0;
                   return _buildBalanceDisplay(usdBalance);
@@ -111,7 +112,7 @@ class _WalletPageState extends State<WalletPage> {
         padding: const EdgeInsets.symmetric(vertical: 16.0),
       ),
       onPressed: () => _showAddFundsDialog(context),
-      child: const Text('Add Funds', style: TextStyle(fontSize: 18)),
+      child:  Text(AppLocalizations.of(context)!.addFunds, style: TextStyle(fontSize: 18)),
     );
   }
 
@@ -135,7 +136,7 @@ class _WalletPageState extends State<WalletPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Add Funds'),
+          title:  Text(AppLocalizations.of(context)!.addFunds),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -144,7 +145,7 @@ class _WalletPageState extends State<WalletPage> {
                 onChanged: (value) {
                   amountToAdd = double.tryParse(value) ?? 0.0;
                 },
-                decoration: const InputDecoration(labelText: 'Amount'),
+                decoration:  InputDecoration(labelText: AppLocalizations.of(context)!.amount),
               ),
               const SizedBox(height: 20),
               ElevatedButton(
@@ -161,7 +162,7 @@ class _WalletPageState extends State<WalletPage> {
                       borderRadius: BorderRadius.circular(8.0)),
                   padding: const EdgeInsets.symmetric(vertical: 16.0),
                 ),
-                child: const Text('Add', style: TextStyle(fontSize: 18)),
+                child:  Text(AppLocalizations.of(context)!.addFunds, style: TextStyle(fontSize: 18)),
               ),
             ],
           ),

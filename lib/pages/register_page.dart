@@ -1,5 +1,6 @@
 import '../auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'home_page.dart';
 
 class RegisterPage extends StatelessWidget {
@@ -33,11 +34,11 @@ class RegisterPage extends StatelessWidget {
               fit: BoxFit.contain,
             ),
             const SizedBox(height: 16),
-            _buildTextField(nameController, 'Name'),
+            _buildTextField(nameController, AppLocalizations.of(context)!.name),
             const SizedBox(height: 16),
-            _buildTextField(emailController, 'Email', keyboardType: TextInputType.emailAddress),
+            _buildTextField(emailController, AppLocalizations.of(context)!.email, keyboardType: TextInputType.emailAddress),
             const SizedBox(height: 16),
-            _buildTextField(passwordController, 'Password', obscureText: true),
+            _buildTextField(passwordController, AppLocalizations.of(context)!.password, obscureText: true),
             const SizedBox(height: 16),
             MaterialButton(
               child: Ink(
@@ -56,7 +57,7 @@ class RegisterPage extends StatelessWidget {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    "Register",
+                    AppLocalizations.of(context)!.register,
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.white),
                   ),
@@ -92,7 +93,7 @@ class RegisterPage extends StatelessWidget {
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text('Already have an account? Login here.',
+              child: Text(AppLocalizations.of(context)!.navigateLogin,
                   style: TextStyle(color: Colors.green),
               ),
 

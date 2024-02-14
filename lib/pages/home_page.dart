@@ -6,14 +6,14 @@ import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:async';
 import '../models/station_model.dart';
-import 'transaction_page.dart';
 import 'charging_page.dart';
 import 'my_cars_page.dart';
-import 'profile_page.dart';
+import 'charging_details_page.dart';
 import '../auth.dart';
 import 'package:location/location.dart';
 import 'dart:ui' as ui;
 import '../navbar.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../charge_state.dart';
 
@@ -218,9 +218,9 @@ class _HomePageContentState extends State<HomePageContent> {
           width: double.infinity,
           child: Column(
             children: [
-              Text('Şarj İstasyonu Bilgileri', style: TextStyle(fontSize: 20, color: Colors.white)),
-              Text('Adı: ${station.name}', style: TextStyle(fontSize: 20, color: Colors.white)),
-              Text('Konumu: ${station.latitude}, ${station.longitude}', style: TextStyle(fontSize: 20, color: Colors.white)),
+              Text(AppLocalizations.of(context)!.stationInfo, style: TextStyle(fontSize: 20, color: Colors.white)),
+              Text('${AppLocalizations.of(context)!.stationName} : ${station.name}', style: TextStyle(fontSize: 20, color: Colors.white)),
+              Text('${AppLocalizations.of(context)!.stationLocation}: ${station.latitude}, ${station.longitude}', style: TextStyle(fontSize: 20, color: Colors.white)),
               // ... diğer bilgiler
 
               MaterialButton(
@@ -236,8 +236,8 @@ class _HomePageContentState extends State<HomePageContent> {
                   child: Container(
                     constraints: const BoxConstraints(maxWidth: 200, minHeight: 50),
                     alignment: Alignment.center,
-                    child: const Text(
-                      'Rezervasyon Yap',
+                    child: Text(
+                      AppLocalizations.of(context)!.reservation,
                       style: TextStyle(fontSize: 16, color: Colors.white),
                     ),
                   ),
@@ -309,9 +309,8 @@ class _HomePageContentState extends State<HomePageContent> {
     return Scaffold(
       drawer: NavBar(auth: Auth(),),
       appBar: AppBar(
-        title: const Text('Anasayfa'),
         backgroundColor: Colors.green,
-        iconTheme: IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: Color(0xff262930)),
       ),
       body: _isMapReady
           ? Stack(

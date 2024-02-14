@@ -4,8 +4,10 @@ import '../auth.dart';
 import '../charge_state.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../navbar.dart';
 import 'add_car_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class MyCarsPage extends StatefulWidget {
   const MyCarsPage({Key? key}) : super(key: key);
@@ -19,7 +21,7 @@ class _MyCarsPageState extends State<MyCarsPage> {
   late Timer _timer;
 
   ChargeState _getChargeState(BuildContext context) {
-    return Provider.of<ChargeState>(context, listen: false);
+    return context.read<ChargeState>();
   }
 
   @override
@@ -39,7 +41,7 @@ class _MyCarsPageState extends State<MyCarsPage> {
   }
 
   void _decreaseRemainingCharge() async {
-    if(mounted){
+    if (mounted) {
       ChargeState chargeState = _getChargeState(context);
 
       // Update Firestore and get the updated data
@@ -51,7 +53,6 @@ class _MyCarsPageState extends State<MyCarsPage> {
       // Update the provider with the new list of cars
       chargeState.updateUserCharge(_userCars);
     }
-
   }
 
   Future<void> _updateRemainingChargeInFirestore() async {
@@ -131,53 +132,54 @@ class _MyCarsPageState extends State<MyCarsPage> {
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
     Auth auth = Provider.of<Auth>(context);
     return Scaffold(
+      drawer: NavBar(auth: Auth()),
       appBar: AppBar(
-        title: Text('My Cars'),
         backgroundColor: const Color(0xff26B6E1),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _userCars.isNotEmpty
-                ? Expanded(
-              child: ListView.builder(
-                itemCount: _userCars.length,
-                itemBuilder: (context, index) {
-                  return Card(
-                    child: ListTile(
-                      title: Text(_userCars[index]['name']),
-                      subtitle: Text(
-                        'Initial Charge: ${_userCars[index]['initialCharge'].toString()}%' +
-                            '\nRemaining Charge: ${_userCars[index]['remainingCharge'].toString()}%',
+        child: ChangeNotifierProvider(
+          create: (_) => ChargeState(), // Add this line
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _userCars.isNotEmpty
+                  ? Expanded(
+                child: ListView.builder(
+                  itemCount: _userCars.length,
+                  itemBuilder: (context, index) {
+                    return Card(
+                      child: ListTile(
+                        title: Text(_userCars[index]['name']),
+                        subtitle: Text(
+                          '${AppLocalizations.of(context)!.initialCharge}: ${_userCars[index]['initialCharge'].toString()}%' +
+                              '\n${AppLocalizations.of(context)!.remainingCharge}: ${_userCars[index]['remainingCharge'].toString()}%',
+                        ),
                       ),
-                      // You can customize the ListTile as needed
-                    ),
+                    );
+                  },
+                ),
+              )
+                  : Text(AppLocalizations.of(context)!.carCheck),
+              SizedBox(height: 16),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xff26B6E1),
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => AddCarPage()),
                   );
                 },
+                child: Text(AppLocalizations.of(context)!.addCar),
               ),
-            )
-                : Text('No cars added yet.'),
-            SizedBox(height: 16),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xff26B6E1),
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AddCarPage()),
-                );
-              },
-              child: Text('Add Car'),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

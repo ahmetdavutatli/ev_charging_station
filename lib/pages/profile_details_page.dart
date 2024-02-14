@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../auth.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 
 class ProfileDetailsPage extends StatefulWidget {
   final Auth auth;
@@ -62,9 +64,9 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
           'email': _emailController.text,
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('User data updated successfully!')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.profileUpdated)));
       } else {
-        _showPasswordErrorAlert('Please enter your password to update user data.');
+        _showPasswordErrorAlert(AppLocalizations.of(context)!.passwordRequired);
       }
     } catch (e) {
       print('Error updating user data: $e');
@@ -75,7 +77,7 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
         // Check for specific error codes
         if (e.code == 'invalid-credential') {
           // Display an error message for an incorrect credential
-          _showPasswordErrorAlert('Invalid password. Please try again.');
+          _showPasswordErrorAlert(AppLocalizations.of(context)!.invalidPassword);
         } else {
           _showPasswordErrorAlert('Error updating user data. Please try again.');
         }
@@ -90,14 +92,14 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Invalid Password'),
+          title: Text(AppLocalizations.of(context)!.error),
           content: Text(message),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('OK'),
+              child: Text(AppLocalizations.of(context)!.ok),
             ),
           ],
         );
@@ -109,7 +111,6 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profile Details'),
         backgroundColor: Color(0xff26B6E1),
       ),
       body: Padding(
@@ -120,7 +121,7 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
             // Name TextField
             TextField(
               controller: _nameController,
-              decoration: InputDecoration(labelText: 'Name'),
+              decoration: InputDecoration(labelText: AppLocalizations.of(context)!.name),
             ),
 
             SizedBox(height: 16),
@@ -128,7 +129,7 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
             // Email TextField
             TextField(
               controller: _emailController,
-              decoration: InputDecoration(labelText: 'Email'),
+              decoration: InputDecoration(labelText: AppLocalizations.of(context)!.email),
             ),
 
             SizedBox(height: 16),
@@ -136,7 +137,7 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
             // Password TextField
             TextField(
               controller: _passwordController,
-              decoration: InputDecoration(labelText: 'Password'),
+              decoration: InputDecoration(labelText: AppLocalizations.of(context)!.password),
               obscureText: true,
             ),
 
@@ -148,7 +149,7 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
                 backgroundColor: Color(0xff26B6E1),
               ),
               onPressed: _updateUserData,
-              child: Text('Update'),
+              child: Text(AppLocalizations.of(context)!.update),
             ),
           ],
         ),

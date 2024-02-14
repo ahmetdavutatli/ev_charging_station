@@ -5,6 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../models/car_model.dart';
 import '../services/car_services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 
 class AddCarPage extends StatefulWidget {
 
@@ -37,7 +39,6 @@ class _AddCarPageState extends State<AddCarPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Choose a Car'),
         backgroundColor: const Color(0xff26B6E1),
       ),
       body: _cars.isNotEmpty
@@ -56,7 +57,7 @@ class _AddCarPageState extends State<AddCarPage> {
                 onPressed: () {
                   _addCarToUserProfile(_cars[index]);
                 },
-                child: Text('Select Car'),
+                child: Text(AppLocalizations.of(context)!.selectCar),
               ),
             ),
           );
