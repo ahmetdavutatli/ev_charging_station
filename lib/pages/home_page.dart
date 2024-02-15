@@ -169,16 +169,17 @@ class _HomePageContentState extends State<HomePageContent> {
   }
 
   Future<void> fetchEVChargingStations() async {
-    var url = Uri.parse('https://ev-charge-finder.p.rapidapi.com/search-by-coordinates-point');
+    var url = Uri.parse('https://ev-charge-finder.p.rapidapi.com/search-by-coordinates-point')
+        .replace(queryParameters: {
+      'lat': 'latitude.toString()',
+      'lng': 'longitude.toString()',
+      'limit': '20'
+    });
 
     try {
       var response = await http.get(url, headers: {
         'X-RapidAPI-Key': '71c9bd1a78msh223538a1e2a0255p182e47jsnd60d91a90620',
         'X-RapidAPI-Host': 'ev-charge-finder.p.rapidapi.com'
-      }, parameters: {
-        'lat': '37.359428',
-        'lng': '-121.925337',
-        'limit': '20'
       });
 
       if (response.statusCode == 200) {
@@ -188,7 +189,7 @@ class _HomePageContentState extends State<HomePageContent> {
         print('Request failed with status: ${response.statusCode}.');
       }
     } catch (error) {
-      print('An error occurred:$error');
+      print('An error occurred: $error');
     }
   }
 
@@ -327,7 +328,7 @@ class _HomePageContentState extends State<HomePageContent> {
 
     // Marker'ları oluştur
     List<Station> stations = await _stationService.getStations();
-    markers.addAll(stations.map((station) {
+    markers.addAll(stations.data.map((station) {
       return Marker(
         markerId: MarkerId(station.id),
         position: LatLng(station.latitude, station.longitude),
