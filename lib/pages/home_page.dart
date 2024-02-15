@@ -8,7 +8,6 @@ import 'dart:async';
 import '../models/station_model.dart';
 import 'charging_page.dart';
 import 'my_cars_page.dart';
-import 'charging_details_page.dart';
 import '../auth.dart';
 import 'package:location/location.dart';
 import 'dart:ui' as ui;
@@ -16,7 +15,8 @@ import '../navbar.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../selected_car.dart';
-import '../charge_state.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class HomePage extends StatefulWidget {
 
@@ -165,6 +165,30 @@ class _HomePageContentState extends State<HomePageContent> {
       setState(() {
         _isMapReady = true;
       });
+    }
+  }
+
+  Future<void> fetchEVChargingStations() async {
+    var url = Uri.parse('https://ev-charge-finder.p.rapidapi.com/search-by-coordinates-point');
+
+    try {
+      var response = await http.get(url, headers: {
+        'X-RapidAPI-Key': '71c9bd1a78msh223538a1e2a0255p182e47jsnd60d91a90620',
+        'X-RapidAPI-Host': 'ev-charge-finder.p.rapidapi.com'
+      }, parameters: {
+        'lat': '37.359428',
+        'lng': '-121.925337',
+        'limit': '20'
+      });
+
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        print(data);
+      } else {
+        print('Request failed with status: ${response.statusCode}.');
+      }
+    } catch (error) {
+      print('An error occurred:$error');
     }
   }
 
@@ -324,7 +348,15 @@ class _HomePageContentState extends State<HomePageContent> {
     return Scaffold(
       drawer: NavBar(auth: Auth(),),
       appBar: AppBar(
-        backgroundColor: Colors.green,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.green, Colors.lightGreen],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
         iconTheme: IconThemeData(color: Color(0xff262930)),
       ),
       body: _isMapReady
@@ -354,8 +386,18 @@ class _HomePageContentState extends State<HomePageContent> {
                         CameraUpdate.zoomIn(),
                       );
                     },
-                    child: Icon(Icons.add),
-                    backgroundColor: Colors.green,
+                    child: Container(
+                      width: MediaQuery.of(context).size.width * 1.0,
+                      height: MediaQuery.of(context).size.height * 1.0,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.green, Colors.lightGreen],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        ),
+                      ),
+                      child: Icon(Icons.add),
+                    ),
                   ),
                   SizedBox(height: 16),
                   FloatingActionButton(
