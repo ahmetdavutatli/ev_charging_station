@@ -1,5 +1,3 @@
-// add_car_page.dart
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -7,9 +5,7 @@ import '../models/car_model.dart';
 import '../services/car_services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-
 class AddCarPage extends StatefulWidget {
-
   @override
   _AddCarPageState createState() => _AddCarPageState();
 }
@@ -71,7 +67,6 @@ class _AddCarPageState extends State<AddCarPage> {
 
   void _addCarToUserProfile(Car selectedCar) async {
     try {
-      // Get the current user from FirebaseAuth
       User? user = FirebaseAuth.instance.currentUser;
 
       if (user != null) {
@@ -80,7 +75,7 @@ class _AddCarPageState extends State<AddCarPage> {
             {
               'name': selectedCar.carName,
               'initialCharge': selectedCar.initialCharge,
-              'remainingCharge': selectedCar.initialCharge, // Initially set remainingCharge same as initialCharge
+              'remainingCharge': selectedCar.initialCharge,
             }
           ]),
         });
@@ -90,11 +85,10 @@ class _AddCarPageState extends State<AddCarPage> {
             content: Text('Car ${selectedCar.carName} added to your profile.'),
           ),
         );
+        Navigator.of(context).pop(); // Close the Add Car page after adding a car
       }
     } catch (e) {
       print('Error adding car to user profile: $e');
     }
   }
 }
-
-

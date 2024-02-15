@@ -1,9 +1,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.ev_charging_station">
 
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.CAMERA" />
 
 
     <application
@@ -12,7 +17,7 @@
         android:icon="@mipmap/ic_launcher">
 
         <meta-data android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyAtwSXiZI96dpuYxJw0zO5vh2SMPDqIQAs"/>
+            android:value="AIzaSyD1sRdXQXdoegkZhWjs2V6PzQIe6m1k4vE"/>
 
         <activity
             android:name=".MainActivity"

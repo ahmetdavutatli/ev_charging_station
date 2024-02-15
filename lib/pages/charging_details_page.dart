@@ -1,13 +1,11 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:ev_charging_station/models/station_model.dart';
-import 'package:ev_charging_station/services/station_services.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
+import '../models/station_model.dart';
+import '../selected_car.dart';
 import '../auth.dart';
-import '../navbar.dart';
-import 'home_page.dart';
 
 class ChargingDetailsPage extends StatefulWidget {
   final Station station;
@@ -19,183 +17,130 @@ class ChargingDetailsPage extends StatefulWidget {
 }
 
 class _ChargingDetailsPageState extends State<ChargingDetailsPage> {
-  late List<Map<String, dynamic>> _userCars;
-  Timer? _chargingTimer;
-  bool _chargingStarted = false;
-  late int _selectedCarIndex;
+  late Timer _chargingTimer;
 
   @override
   void initState() {
     super.initState();
-    _userCars = [];
-    _selectedCarIndex = -1;
-    _loadUserCars();
-  }
-
-  Future<void> _loadUserCars() async {
-    String? userId = FirebaseAuth.instance.currentUser?.uid;
-
-    if (userId != null) {
-      DocumentReference userRef = FirebaseFirestore.instance.collection('users').doc(userId);
-
-      DocumentSnapshot userSnapshot = await userRef.get();
-
-      if (userSnapshot.exists) {
-        final userData = userSnapshot.data() as Map<String, dynamic>?;
-
-        if (userData != null && userData.containsKey('cars')) {
-          List<dynamic> userCars = userData['cars'];
-
-          setState(() {
-            _userCars = userCars.map((car) {
-              return {
-                'name': car['name'],
-                'initialCharge': car['initialCharge'],
-                'remainingCharge': (car['remainingCharge'] is double)
-                    ? (car['remainingCharge'] as double).toInt()
-                    : car['remainingCharge'], // Convert to int if it's a double
-              };
-            }).toList().cast<Map<String, dynamic>>();
-          });
-        }
-      }
-    }
-  }
-
-  Future<void> _updateRemainingChargeInFirestore(int remainingCharge) async {
-    String? userId = FirebaseAuth.instance.currentUser?.uid;
-
-    if (userId != null) {
-      DocumentReference userRef = FirebaseFirestore.instance.collection('users').doc(userId);
-
-      DocumentSnapshot userSnapshot = await userRef.get();
-
-      if (userSnapshot.exists) {
-        final userData = userSnapshot.data() as Map<String, dynamic>?;
-
-        if (userData != null && userData.containsKey('cars')) {
-          List<dynamic> userCars = userData['cars'];
-
-          if (_selectedCarIndex >= 0 && _selectedCarIndex < userCars.length) {
-            userCars[_selectedCarIndex]['remainingCharge'] = remainingCharge.toDouble(); // Convert to double
-          }
-
-          await userRef.update({'cars': userCars});
-
-          // Reload user cars after updating Firestore
-          await _loadUserCars();
-
-          // Update the local _userCars variable
-          setState(() {
-            _userCars = userCars.cast<Map<String, dynamic>>();
-          });
-        }
-      }
-    }
-  }
-
-
-
-  void _startCharging(int index) {
-    if (!_chargingStarted) {
-      _selectedCarIndex = index;
-      _chargingStarted = true;
-
-      _chargingTimer = Timer.periodic(Duration(seconds: 5), (timer) {
-        if (mounted) {
-          setState(() {
-            if (_userCars[_selectedCarIndex]['remainingCharge'] < 100) {
-              // Ensure the value is an int before incrementing
-              int remainingCharge = _userCars[_selectedCarIndex]['remainingCharge'].toInt();
-              remainingCharge += 1;
-
-              _userCars[_selectedCarIndex]['remainingCharge'] = remainingCharge;
-              _updateRemainingChargeInFirestore(remainingCharge);
-            } else {
-              timer.cancel();
-              _stopCharging();
-            }
-          });
-        }
-      });
-    } else {
-      _stopCharging();
-    }
-  }
-
-  void _stopCharging() {
-    _chargingTimer?.cancel();
-    _chargingStarted = false;
-    _selectedCarIndex = -1;
+    startCharging();
   }
 
   @override
   void dispose() {
-    _chargingTimer?.cancel();
+    _chargingTimer.cancel();
     super.dispose();
+  }
+
+  void startCharging() {
+    const chargingInterval = Duration(seconds: 5);
+    _chargingTimer = Timer.periodic(chargingInterval, (timer) {
+      increaseRemainingCharge();
+    });
+  }
+
+  Future<void> increaseRemainingCharge() async {
+    SelectedCar selectedCar = Provider.of<SelectedCar>(context, listen: false);
+
+    if (selectedCar != null) {
+      String? userId = FirebaseAuth.instance.currentUser?.uid;
+
+      if (userId != null) {
+        DocumentReference userRef = FirebaseFirestore.instance.collection('users').doc(userId);
+
+        await FirebaseFirestore.instance.runTransaction((transaction) async {
+          DocumentSnapshot userSnapshot = await transaction.get(userRef);
+
+          if (userSnapshot.exists) {
+            final userData = userSnapshot.data() as Map<String, dynamic>?;
+
+            if (userData != null && userData.containsKey('cars')) {
+              List<dynamic> userCars = userData['cars'];
+
+              int? selectedCarIndex = selectedCar.selectedCarIndex;
+
+              if (selectedCarIndex != null && selectedCarIndex < userCars.length) {
+                int remainingCharge = userCars[selectedCarIndex]['remainingCharge'];
+                remainingCharge = ((remainingCharge + 1) * 1.01).round();
+
+                userCars[selectedCarIndex]['remainingCharge'] = remainingCharge;
+
+                await transaction.update(userRef, {'cars': userCars});
+              }
+            }
+          }
+        });
+
+        // Trigger a rebuild of the widget after updating the data
+        setState(() {});
+      }
+    }
+  }
+
+  Future<void> updateStationStatus(bool isEmpty) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('stations')
+          .doc(widget.station.id)
+          .update({'isEmpty': isEmpty});
+    } catch (error) {
+      print('Error updating station status: $error');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xff26B6E1),
-        title: Text(AppLocalizations.of(context)!.stationInfo),
+        title: Text('Charging Details'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              '${AppLocalizations.of(context)!.stationName}: ${widget.station.name}',
-              style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+              'Charging Details for ${widget.station.name}',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 8.0),
-            Text(
-              '${AppLocalizations.of(context)!.stationLocation}: ${widget.station.latitude}, ${widget.station.longitude}',
-              style: TextStyle(fontSize: 16.0),
+            SizedBox(height: 20),
+            Consumer<SelectedCar>(
+              builder: (context, selectedCar, child) {
+                Map<String, dynamic>? carData = selectedCar.selectedCarIndex != null
+                    ? selectedCar.userCars[selectedCar.selectedCarIndex!]
+                    : null;
+
+                return carData != null
+                    ? Column(
+                  children: [
+                    Text(
+                      'Selected Car: ${carData['name']}',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      'Remaining Charge: ${carData['remainingCharge']}%',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ],
+                )
+                    : Text(
+                  'No car selected',
+                  style: TextStyle(fontSize: 18),
+                );
+              },
             ),
-            SizedBox(height: 8.0),
-            Text(
-              '${AppLocalizations.of(context)!.stationAddress}: ${widget.station.address}',
-              style: TextStyle(fontSize: 16.0),
-            ),
-            SizedBox(height: 16),
-            _userCars.isNotEmpty
-                ? Expanded(
-              child: ListView.builder(
-                itemCount: _userCars.length,
-                itemBuilder: (context, index) {
-                  return Card(
-                      elevation: 3.0,
-                      margin: EdgeInsets.symmetric(vertical: 8.0),
-                      child: ListTile(
-                        contentPadding: EdgeInsets.all(16.0),
-                        title: Text(
-                          _userCars[index]['name'],
-                          style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(
-                          '${AppLocalizations.of(context)!.initialCharge}: ${_userCars[index]['initialCharge'].toString()}%' +
-                              '\n${AppLocalizations.of(context)!.remainingCharge}: ${_userCars[index]['remainingCharge'].toString()}%',
-                          style: TextStyle(fontSize: 14.0),
-                        ),
-                        trailing: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xff26B6E1),
-                          ),
-                          onPressed: () {
-                            _startCharging(index);
-                          },
-                          child: Text(_chargingStarted ? AppLocalizations.of(context)!.stopCharging : AppLocalizations.of(context)!.startCharging
-                          ),
-                        ),
-                      ));
-                },
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                increaseRemainingCharge();
+                updateStationStatus(false);
+              },
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                textStyle: TextStyle(fontSize: 18),
               ),
-            )
-                : Text(AppLocalizations.of(context)!.carCheck),
+              child: Text('Start Charging'),
+            ),
           ],
         ),
       ),

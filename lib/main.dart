@@ -1,13 +1,14 @@
-import 'package:ev_charging_station/pages/home_page.dart';
+import 'package:ev_charging_station/pages/login_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'charge_state.dart';
-import 'pages/login_page.dart';
+import 'pages/my_cars_page.dart'; // Updated import
 import 'auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'language.dart';
+import 'selected_car.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,7 +17,8 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => ChargeState()),
-        Provider<Auth>(create: (context) => Auth()), // Use Provider instead of ChangeNotifierProvider
+        ChangeNotifierProvider(create: (context) => SelectedCar()),
+        Provider<Auth>(create: (context) => Auth()),
         // Add other providers if needed
       ],
       child: const MyApp(),
@@ -39,10 +41,8 @@ class MyApp extends StatelessWidget {
             locale: languageProvider.currentLocale,
             debugShowCheckedModeBanner: false,
             home: FutureBuilder(
-              // Initialize FlutterFire:
               future: Firebase.initializeApp(),
               builder: (context, snapshot) {
-                // Check for errors
                 if (snapshot.hasError) {
                   print('Error initializing Firebase: ${snapshot.error}');
                   return const Scaffold(
@@ -52,12 +52,10 @@ class MyApp extends StatelessWidget {
                   );
                 }
 
-                // Once complete, show your application
                 if (snapshot.connectionState == ConnectionState.done) {
-                  return LoginPage(auth: Provider.of<Auth>(context)); // Ensure proper Auth provider usage
+                  return LoginPage(auth: Provider.of<Auth>(context));
                 }
 
-                // Otherwise, show a loading indicator
                 return const Scaffold(
                   body: Center(
                     child: CircularProgressIndicator(),

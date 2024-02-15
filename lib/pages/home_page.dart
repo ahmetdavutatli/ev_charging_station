@@ -15,6 +15,7 @@ import 'dart:ui' as ui;
 import '../navbar.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
+import '../selected_car.dart';
 import '../charge_state.dart';
 
 class HomePage extends StatefulWidget {
@@ -37,8 +38,12 @@ class _HomePageState extends State<HomePage> {
 
     // Adjusting the page list based on the items you want to keep
     _pages = [
-      ChargingPage(stationService: StationService()),
-      const HomePageContent(),
+      ChargingPage(),
+      Consumer<SelectedCar>(
+        builder: (context, selectedCar, child) {
+          return HomePageContent(selectedCar: selectedCar);
+        },
+      ),
       MyCarsPage(),
     ];
   }
@@ -80,7 +85,7 @@ class _HomePageState extends State<HomePage> {
 class HomePageContent extends StatefulWidget {
   final Station? focusedStation;
 
-  const HomePageContent({Key? key, this.focusedStation}) : super(key: key);
+  const HomePageContent({Key? key, this.focusedStation, required SelectedCar selectedCar}) : super(key: key);
 
   @override
   _HomePageContentState createState() => _HomePageContentState();
@@ -156,9 +161,11 @@ class _HomePageContentState extends State<HomePageContent> {
   Future<void> _initializeMap() async {
     print('initializing map...');
     await _getLocation();
-    setState(() {
-      _isMapReady = true;
-    });
+    if(mounted){
+      setState(() {
+        _isMapReady = true;
+      });
+    }
   }
 
   void _focusOnStation(Station station) {
@@ -198,66 +205,74 @@ class _HomePageContentState extends State<HomePageContent> {
 
   void _showBottomSheet({required Station station}) {
     showModalBottomSheet(
-      backgroundColor: Colors.green,
+      backgroundColor: Colors.transparent,
       context: context,
-      builder: (context) => BottomSheet(
-        onClosing: () {},
-        builder: (context) => Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.black,Colors.black,Colors.black54],
-              begin: Alignment.topCenter,
-              end: Alignment.center,
-            ),
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
-            ),
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
           ),
-          height: 250,
-          width: double.infinity,
+          gradient: LinearGradient(
+            colors: [Colors.black87, Colors.black54],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(AppLocalizations.of(context)!.stationInfo, style: TextStyle(fontSize: 20, color: Colors.white)),
-              Text('${AppLocalizations.of(context)!.stationName} : ${station.name}', style: TextStyle(fontSize: 20, color: Colors.white)),
-              Text('${AppLocalizations.of(context)!.stationLocation}: ${station.latitude}, ${station.longitude}', style: TextStyle(fontSize: 20, color: Colors.white)),
-              // ... diğer bilgiler
-
-              MaterialButton(
-                child: Ink(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.green, Colors.lightGreen],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
-                    borderRadius: BorderRadius.circular(10),
+              Text(
+                AppLocalizations.of(context)!.stationInfo,
+                style: TextStyle(fontSize: 24, color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 16),
+              Text(
+                '${AppLocalizations.of(context)!.stationName} : ${station.name}',
+                style: TextStyle(fontSize: 18, color: Colors.white),
+              ),
+              SizedBox(height: 8),
+              Text(
+                '${AppLocalizations.of(context)!.stationLocation}: ${station.latitude}, ${station.longitude}',
+                style: TextStyle(fontSize: 18, color: Colors.white),
+              ),
+              Spacer(), // Push the button to the bottom
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChargingPage(),
+                      ),
+                    );
+                  },
+                  icon: Icon(Icons.bolt_sharp),
+                  label: Text(
+                    AppLocalizations.of(context)!.reservation,
+                    style: TextStyle(fontSize: 18, color: Colors.black),
                   ),
-                  child: Container(
-                    constraints: const BoxConstraints(maxWidth: 200, minHeight: 50),
-                    alignment: Alignment.center,
-                    child: Text(
-                      AppLocalizations.of(context)!.reservation,
-                      style: TextStyle(fontSize: 16, color: Colors.white),
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.green,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
                   ),
                 ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ChargingDetailsPage(station: station),
-                    ),
-                  );
-                },
               ),
             ],
           ),
-
         ),
       ),
     );
   }
+
+
+
 
 
   Future<void> _loadStations() async {
