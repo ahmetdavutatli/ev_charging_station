@@ -17,9 +17,13 @@ import 'package:provider/provider.dart';
 import '../selected_car.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../global_stations.dart' as global_stations;
 
 double globalLatitude = 39.9334;  // Default initial value
-double globalLongitude = 32.8597; // Default initial value
+double globalLongitude = 32.8597; // Default initial valuell
+List<Station> stations = global_stations.stations;
+
+
 
 class HomePage extends StatefulWidget {
 
@@ -35,7 +39,6 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 1;
   late List<Widget> _pages;
 
-  late List<Station> stations;
 
 
   @override
@@ -44,7 +47,7 @@ class _HomePageState extends State<HomePage> {
 
     // Adjusting the page list based on the items you want to keep
     _pages = [
-      ChargingPage(),
+      ChargingPage(stations: stations,),
       Consumer<SelectedCar>(
         builder: (context, selectedCar, child) {
           return HomePageContent(selectedCar: selectedCar);
@@ -107,6 +110,7 @@ class _HomePageContentState extends State<HomePageContent> {
   BitmapDescriptor markerIconStation = BitmapDescriptor.defaultMarker;
   BitmapDescriptor markerIconUser = BitmapDescriptor.defaultMarker;
   Set<Marker> _markers = <Marker>{};
+
 
 
 
@@ -178,7 +182,7 @@ class _HomePageContentState extends State<HomePageContent> {
         .replace(queryParameters: {
       'lat': latitude.toString(),
       'lng': longitude.toString(),
-      'limit': '20'
+      'limit': '11'
     });
 
     try {
@@ -190,9 +194,11 @@ class _HomePageContentState extends State<HomePageContent> {
       if (response.statusCode == 200) {
         print('Request successful.');
         var data = json.decode(response.body);
-        List<Station> stations = (data['data'] as List).map((station) {
+       stations = (data['data'] as List).asMap().entries.map((entry) {
+          int index = entry.key + 1; // This will start the index from 1
+          var station = entry.value;
           return Station(
-            id: station['id'],
+            id: index.toString(),
             name: station['name'],
             latitude: station['latitude'],
             longitude: station['longitude'],
@@ -293,7 +299,7 @@ class _HomePageContentState extends State<HomePageContent> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ChargingPage(),
+                        builder: (context) => ChargingPage(stations: stations,),
                       ),
                     );
                   },
@@ -346,7 +352,7 @@ class _HomePageContentState extends State<HomePageContent> {
     // Marker'ları oluştur
     Future<void> _createMarkers() async {
       try {
-        List<Station> stations = await fetchEVChargingStations(globalLatitude, globalLongitude);
+        stations = await fetchEVChargingStations(globalLatitude, globalLongitude);
 
         var markers = stations.map((station) {
           return Marker(

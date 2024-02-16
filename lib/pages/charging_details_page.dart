@@ -175,18 +175,6 @@ class _ChargingDetailsPageState extends State<ChargingDetailsPage> {
     }
   }
 
-
-  Future<void> updateStationStatus(bool isEmpty) async {
-    try {
-      await FirebaseFirestore.instance
-          .collection('stations')
-          .doc(widget.station.id)
-          .update({'isEmpty': isEmpty});
-    } catch (error) {
-      print('Error updating station status: $error');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -296,7 +284,6 @@ class _ChargingDetailsPageState extends State<ChargingDetailsPage> {
               onPressed: isChargingStopped ? () {
                 // Trigger the functionality to increase remaining charge and set isEmpty to false
                 increaseRemainingCharge();
-                updateStationStatus(false);
               } : null,
             ),
             SizedBox(height: 20),

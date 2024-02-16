@@ -1,7 +1,3 @@
-import 'dart:async';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
@@ -10,8 +6,13 @@ import '../models/station_model.dart';
 import '../navbar.dart';
 import '../selected_car.dart';
 import 'charging_details_page.dart';
+import '../global_stations.dart' as global_stations;
 
 class ChargingPage extends StatefulWidget {
+List<Station> stations= global_stations.stations;
+
+  ChargingPage({required this.stations});
+
   @override
   _ChargingPageState createState() => _ChargingPageState();
 }
@@ -42,17 +43,19 @@ class _ChargingPageState extends State<ChargingPage> {
 
   void _handleScannedData(String? data) async {
     if (data != null) {
-      int stationId = int.tryParse(data) ?? 0;
-      Station? selectedStation = await getStationByStationId(stationId);
+      int scannedIndex = int.tryParse(data) ?? 0;
+
+      Station? selectedStation = widget.stations.firstWhere(
+            (station) => station.id == scannedIndex.toString(),
+        orElse: () => Station(id: '-1', name: 'Default Station', latitude: 1.0, longitude: 1.0, address: 'Default Address'),
+      );
 
       print('Scanned QR Code: $data');
 
       if (selectedStation != null) {
-        // Check if ChargingDetailsPage is already in the stack
         bool isChargingDetailsPageOpen = Navigator.of(context).canPop();
 
         if (!isChargingDetailsPageOpen) {
-          // Only push a new ChargingDetailsPage if it's not already in the stack
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -67,61 +70,9 @@ class _ChargingPageState extends State<ChargingPage> {
   }
 
 
-  Future<Station?> getStationByStationId(int? stationID) async {
-    try {
-      QuerySnapshot stationSnapshot = await FirebaseFirestore.instance
-          .collection('stations')
-          .where('stationID', isEqualTo: stationID)
-          .get();
-
-      if (stationSnapshot.docs.isNotEmpty) {
-        return Station.fromFirestore(
-          stationSnapshot.docs.first.data() as Map<String, dynamic>,
-          stationSnapshot.docs.first.id,
-        );
-      } else {
-        print('Station not found for ID: $stationID');
-        return null;
-      }
-    } catch (error) {
-      print('Error retrieving station: $error');
-      return null;
-    }
-  }
-
-  Future<void> updateStationStatus(Station station, bool isEmpty) async {
-    try {
-      await FirebaseFirestore.instance
-          .collection('stations')
-          .doc(station.id)
-          .update({'isEmpty': isEmpty});
-    } catch (error) {
-      print('Error updating station status: $error');
-    }
-  }
-
-
   @override
   void dispose() {
     controller.dispose();
     super.dispose();
   }
-}
-
-class ChargingDetailsPageRoute extends PageRouteBuilder {
-  final Station station;
-
-  ChargingDetailsPageRoute({required this.station})
-      : super(
-    pageBuilder: (context, animation, secondaryAnimation) =>
-        ChargingDetailsPage(station: station),
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      const begin = Offset(1.0, 0.0);
-      const end = Offset.zero;
-      const curve = Curves.easeInOut;
-      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-      var offsetAnimation = animation.drive(tween);
-      return SlideTransition(position: offsetAnimation, child: child);
-    },
-  );
 }
