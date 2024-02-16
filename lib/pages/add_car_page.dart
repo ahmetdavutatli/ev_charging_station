@@ -35,25 +35,28 @@ class _AddCarPageState extends State<AddCarPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xff26B6E1),
+        centerTitle: true,
+        title: Image.asset('assets/logo.png', height: 60, width: 60),
+        backgroundColor: Colors.green,
       ),
       body: _cars.isNotEmpty
           ? ListView.builder(
         itemCount: _cars.length,
         itemBuilder: (context, index) {
           return Card(
+            color: const Color(0xff262930),
             margin: const EdgeInsets.all(8.0),
             child: ListTile(
-              title: Text(_cars[index].carName),
-              subtitle: Text(_cars[index].manufacturer),
+              title: Text(_cars[index].carName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              subtitle: Text(_cars[index].manufacturer, style: const TextStyle(color: Colors.white)),
               trailing: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xff26B6E1),
+                  backgroundColor: Colors.green,
                 ),
                 onPressed: () {
                   _addCarToUserProfile(_cars[index]);
                 },
-                child: Text(AppLocalizations.of(context)!.selectCar),
+                child: Text(AppLocalizations.of(context)!.selectCar, style: const TextStyle(color: Colors.white)),
               ),
             ),
           );
@@ -62,6 +65,7 @@ class _AddCarPageState extends State<AddCarPage> {
           : Center(
         child: CircularProgressIndicator(),
       ),
+      backgroundColor: const Color(0xff262930),
     );
   }
 

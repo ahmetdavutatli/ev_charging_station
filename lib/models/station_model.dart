@@ -21,7 +21,7 @@ class Station {
     final name = data['name'];
     final latitude = data['latitude'];
     final longitude = data['longitude'];
-    final address = data['address'];
+    final address = data['formatted_address'];
 
     print('ID: $id, Name: $name, Latitude: $latitude, Longitude: $longitude, Address: $address');
 

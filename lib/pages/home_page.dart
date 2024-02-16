@@ -21,7 +21,7 @@ import '../global_stations.dart' as global_stations;
 
 double globalLatitude = 39.9334;  // Default initial value
 double globalLongitude = 32.8597; // Default initial valuell
-List<Station> stations = global_stations.stations;
+List<Station> stations = [];
 
 
 
@@ -47,7 +47,7 @@ class _HomePageState extends State<HomePage> {
 
     // Adjusting the page list based on the items you want to keep
     _pages = [
-      ChargingPage(stations: stations,),
+      ChargingPage(),
       Consumer<SelectedCar>(
         builder: (context, selectedCar, child) {
           return HomePageContent(selectedCar: selectedCar);
@@ -187,9 +187,11 @@ class _HomePageContentState extends State<HomePageContent> {
 
     try {
       var response = await http.get(url, headers: {
-        'X-RapidAPI-Key': '5b44f04db6msh69e2aa11abca8ddp18d7aejsn22d8c20034ff',
+        'X-RapidAPI-Key': '71c9bd1a78msh223538a1e2a0255p182e47jsnd60d91a90620',
         'X-RapidAPI-Host': 'ev-charge-finder.p.rapidapi.com'
       });
+
+      print('Response from API: ${response.body}');
 
       if (response.statusCode == 200) {
         print('Request successful.');
@@ -205,6 +207,9 @@ class _HomePageContentState extends State<HomePageContent> {
             address: station['formatted_address'],
           );
         }).toList();
+        global_stations.stations = stations;
+        print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+        print(global_stations.stations[5].id);
         return stations;
       } else {
         print('Request failed with status: ${response.statusCode}.');
@@ -299,7 +304,7 @@ class _HomePageContentState extends State<HomePageContent> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ChargingPage(stations: stations,),
+                        builder: (context) => ChargingPage(),
                       ),
                     );
                   },
@@ -386,15 +391,9 @@ class _HomePageContentState extends State<HomePageContent> {
     return Scaffold(
       drawer: NavBar(auth: Auth(),),
       appBar: AppBar(
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.green, Colors.lightGreen],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
-        ),
+        centerTitle: true,
+        title: Image.asset('assets/logo.png', height: 60, width: 60),
+        backgroundColor: Colors.green,
         iconTheme: IconThemeData(color: Color(0xff262930)),
       ),
       body: _isMapReady
@@ -424,18 +423,9 @@ class _HomePageContentState extends State<HomePageContent> {
                         CameraUpdate.zoomIn(),
                       );
                     },
-                    child: Container(
-                      width: MediaQuery.of(context).size.width * 1.0,
-                      height: MediaQuery.of(context).size.height * 1.0,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Colors.green, Colors.lightGreen],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
-                      ),
+
                       child: Icon(Icons.add),
-                    ),
+                      backgroundColor: Colors.green,
                   ),
                   SizedBox(height: 16),
                   FloatingActionButton(

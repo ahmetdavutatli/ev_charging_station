@@ -3,7 +3,6 @@ import '../auth.dart';
 import '../services/wallet_services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-
 class WalletPage extends StatefulWidget {
   final Auth auth;
   final WalletService walletService;
@@ -15,16 +14,20 @@ class WalletPage extends StatefulWidget {
 }
 
 class _WalletPageState extends State<WalletPage> {
-  double usdToEurRate = 0.92; // Örnek döviz kuru
-  double usdToTryRate = 13.5; // Örnek döviz kuru
-  double usdToBtcRate = 0.000022; // Örnek döviz kuru
+  double usdToEurRate = 0.92;
+  double usdToTryRate = 13.5;
+  double usdToBtcRate = 0.000022;
+  String selectedCurrency = 'USD';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xff26B6E1),
+        backgroundColor: Colors.green,
+        centerTitle: true,
+        title: Image.asset('assets/logo.png', height: 60, width: 60),
       ),
+      backgroundColor: const Color(0xff262930),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -36,7 +39,8 @@ class _WalletPageState extends State<WalletPage> {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 } else if (snapshot.hasError) {
-                  return Center(child: Text('${AppLocalizations.of(context)!.error}: ${snapshot.error}'));
+                  return Center(child: Text('${AppLocalizations.of(context)!.error}: ${snapshot.error}',
+                      style: const TextStyle(color: Colors.white)));
                 } else {
                   double usdBalance = snapshot.data ?? 0.0;
                   return _buildBalanceDisplay(usdBalance);
@@ -57,33 +61,28 @@ class _WalletPageState extends State<WalletPage> {
       children: [
         _buildMainBalanceRow('USD', usdBalance, Icons.attach_money, 30.0),
         const SizedBox(height: 8),
-        _buildSecondaryBalance(
-            'EUR', usdBalance * usdToEurRate, Icons.euro_symbol),
-        _buildSecondaryBalance(
-            'TRY', usdBalance * usdToTryRate, Icons.currency_lira),
-        _buildSecondaryBalance(
-            'BTC', usdBalance * usdToBtcRate, Icons.currency_bitcoin),
+        _buildSecondaryBalance('EUR', usdBalance * usdToEurRate, Icons.euro_symbol),
+        _buildSecondaryBalance('TRY', usdBalance * usdToTryRate, Icons.currency_lira),
+        _buildSecondaryBalance('BTC', usdBalance * usdToBtcRate, Icons.currency_bitcoin),
       ],
     );
   }
 
-  Widget _buildMainBalanceRow(String currency, double balance,
-      IconData iconData, double iconSize) {
+  Widget _buildMainBalanceRow(String currency, double balance, IconData iconData, double iconSize) {
     return ListTile(
       leading: CircleAvatar(
         radius: 25.0,
-        backgroundColor: const Color(0xff26B6E1),
+        backgroundColor: Colors.green,
         child: Icon(iconData, size: iconSize, color: Colors.white),
       ),
       title: Text(
         '$currency: \$${balance.toStringAsFixed(2)}',
-        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
       ),
     );
   }
 
-  Widget _buildSecondaryBalance(String currency, double balance,
-      IconData iconData) {
+  Widget _buildSecondaryBalance(String currency, double balance, IconData iconData) {
     String formattedBalance = currency == 'BTC'
         ? balance.toStringAsFixed(8)
         : balance.toStringAsFixed(2);
@@ -92,11 +91,11 @@ class _WalletPageState extends State<WalletPage> {
       padding: const EdgeInsets.only(top: 8.0),
       child: Row(
         children: [
-          Icon(iconData, color: const Color(0xff26B6E1)),
+          Icon(iconData, color: Colors.green),
           const SizedBox(width: 8),
           Text(
             '$currency: \$${formattedBalance}',
-            style: const TextStyle(fontSize: 16, color: Colors.black54),
+            style: const TextStyle(fontSize: 16, color: Colors.white70),
           ),
         ],
       ),
@@ -106,13 +105,14 @@ class _WalletPageState extends State<WalletPage> {
   Widget _buildAddFundsButton() {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        primary: const Color(0xff26B6E1),
+        primary: Colors.green,
         onPrimary: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
         padding: const EdgeInsets.symmetric(vertical: 16.0),
+        textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
       ),
       onPressed: () => _showAddFundsDialog(context),
-      child:  Text(AppLocalizations.of(context)!.addFunds, style: TextStyle(fontSize: 18)),
+      child: Text(AppLocalizations.of(context)!.addFunds),
     );
   }
 
@@ -136,38 +136,75 @@ class _WalletPageState extends State<WalletPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title:  Text(AppLocalizations.of(context)!.addFunds),
+          title: Text(AppLocalizations.of(context)!.addFunds),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              DropdownButton<String>(
+                value: selectedCurrency,
+                onChanged: (String? newValue) {
+                  setState(() {
+                    selectedCurrency = newValue!;
+                  });
+                },
+                items: <String>['USD', 'EUR', 'TRY', 'BTC']
+                    .map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+              ),
               TextField(
                 keyboardType: TextInputType.number,
                 onChanged: (value) {
-                  amountToAdd = double.tryParse(value) ?? 0.0;
+                  amountToAdd = _convertToUsd(double.tryParse(value) ?? 0.0);
                 },
-                decoration:  InputDecoration(labelText: AppLocalizations.of(context)!.amount),
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)!.amount,
+                  labelStyle: TextStyle(color: Color(0xff262930)),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xff262930)),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: const Color(0xff262930)),
+                  ),
+                ),
+                style: TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  // Add funds and update the UI
                   widget.walletService.addFunds(amountToAdd);
                   setState(() {});
                   Navigator.pop(context); // Close the dialog
                 },
                 style: ElevatedButton.styleFrom(
                   primary: const Color(0xff26B6E1),
+
                   onPrimary: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0)),
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+                  padding: const EdgeInsets.symmetric(vertical: 10.0),
                 ),
-                child:  Text(AppLocalizations.of(context)!.addFunds, style: TextStyle(fontSize: 18)),
+                child: Text(AppLocalizations.of(context)!.addFunds, style: const TextStyle(fontSize: 18)),
               ),
             ],
           ),
         );
       },
     );
+  }
+
+  double _convertToUsd(double amount) {
+    switch (selectedCurrency) {
+      case 'EUR':
+        return amount / usdToEurRate;
+      case 'TRY':
+        return amount / usdToTryRate;
+      case 'BTC':
+        return amount / usdToBtcRate;
+      default:
+        return amount; // Default to USD
+    }
   }
 }

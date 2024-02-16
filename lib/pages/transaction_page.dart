@@ -1,63 +1,161 @@
 import 'package:flutter/material.dart';
-import '../models/transaction_model.dart'; // Import the Transaction model
-import '../services/transaction_services.dart'; // Import the TransactionService
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class TransactionPage extends StatefulWidget {
-  const TransactionPage({Key? key}) : super(key: key);
-
-  @override
-  _TransactionPageState createState() => _TransactionPageState();
-}
-
-class _TransactionPageState extends State<TransactionPage> {
-  final TransactionService transactionService = TransactionService();
-  List<Transaction> transactions = [];
-
-  @override
-  void initState() {
-    super.initState();
-    fetchDataFromDatabase();
-  }
-
-  Future<void> fetchDataFromDatabase() async {
-    List<Transaction> dataFromDatabase = (await transactionService.getTransactions()).cast<Transaction>();
-    setState(() {
-      transactions = dataFromDatabase;
-    });
-  }
-
+class TransactionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Transactions'),
-        backgroundColor: Color(0xff26B6E1),
+        backgroundColor: Colors.green,
+        centerTitle: true,
+        title: Image.asset('assets/logo.png', height: 60, width: 60),
       ),
-      body: transactions.isEmpty
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-        itemCount: transactions.length,
-        itemBuilder: (context, index) {
-          return TransactionItem(transaction: transactions[index]);
-        },
-      ),
+      body: TransactionList(),
+      backgroundColor: Color(0xff262930),
     );
   }
 }
 
-class TransactionItem extends StatelessWidget {
-  final Transaction transaction;
+class TransactionList extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    String? userId = FirebaseAuth.instance.currentUser?.uid;
 
-  const TransactionItem({Key? key, required this.transaction}) : super(key: key);
+    if (userId != null) {
+      return StreamBuilder(
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .collection('transactions')
+            .orderBy('timestamp', descending: true)
+            .snapshots(),
+        builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return Center(child: Text('No transactions yet.'));
+          }
+
+          return ListView.builder(
+            itemCount: snapshot.data!.docs.length,
+            itemBuilder: (context, index) {
+              var transaction = snapshot.data!.docs[index].data() as Map<String, dynamic>;
+
+              // Check for the existence of required fields
+              if (transaction.containsKey('selected_car_name') &&
+                  transaction.containsKey('charging_cost') &&
+                  transaction.containsKey('station_address') &&
+                  transaction.containsKey('station_name') &&
+                  transaction.containsKey('seconds_charged') &&
+                  transaction.containsKey('timestamp')) {
+                return TransactionCard(
+                  selectedCarName: transaction['selected_car_name'],
+                  chargingCost: transaction['charging_cost'],
+                  stationName: transaction['station_name'],
+                  stationAddress: transaction['station_address'],
+                  secondsCharged: transaction['seconds_charged'],
+                  timestamp: transaction['timestamp'].toDate(),
+                );
+              } else {
+                // Log or handle the case where required fields are missing
+                print('Transaction document is missing required fields.');
+                return Container(); // You can return an empty container or handle it differently.
+              }
+            },
+          );
+        },
+      );
+    } else {
+      return Center(child: Text('User not logged in.'));
+    }
+  }
+}
+
+class TransactionCard extends StatelessWidget {
+  final String selectedCarName;
+  final double chargingCost;
+  final String stationAddress;
+  final String stationName;
+  final int secondsCharged;
+  final DateTime timestamp;
+
+  TransactionCard({
+    required this.selectedCarName,
+    required this.chargingCost,
+    required this.stationAddress,
+    required this.stationName,
+    required this.secondsCharged,
+    required this.timestamp,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(transaction.chargingStation),
-      subtitle: Text(
-        'Date: ${transaction.date} - Amount: \$${transaction.amount.toStringAsFixed(2)}',
+    return Card(
+      color: Color(0xff262930),
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      elevation: 3,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
       ),
-      // Customize the appearance of each transaction item here
+      child: ListTile(
+        title: Text(
+          selectedCarName,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: 8),
+            Text(
+              'Charging Cost: \$${chargingCost.toStringAsFixed(2)}',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.green,
+              ),
+            ),
+            SizedBox(height: 4),
+            Text(
+              'Station Name: $stationName',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+            ),
+            SizedBox(height: 4),
+            Text(
+              'Station Address: $stationAddress',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+            ),
+            SizedBox(height: 4),
+            Text(
+              'Charging Duration: $secondsCharged minutes',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+            ),
+            SizedBox(height: 4),
+            Text(
+              'Timestamp: ${timestamp.toString()}',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+            ),
+            SizedBox(height: 8),
+          ],
+        ),
+      ),
     );
   }
 }

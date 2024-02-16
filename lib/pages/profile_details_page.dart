@@ -111,7 +111,9 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xff26B6E1),
+        centerTitle: true,
+        title: Image.asset('assets/logo.png', height: 60, width: 60),
+        backgroundColor: Colors.green,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -121,7 +123,16 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
             // Name TextField
             TextField(
               controller: _nameController,
-              decoration: InputDecoration(labelText: AppLocalizations.of(context)!.name),
+              style: TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: AppLocalizations.of(context)!.name,
+                filled: true,
+                fillColor: Colors.green.withOpacity(0.2),
+                border: OutlineInputBorder(
+                  borderSide: BorderSide.none,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
             ),
 
             SizedBox(height: 16),
@@ -129,7 +140,16 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
             // Email TextField
             TextField(
               controller: _emailController,
-              decoration: InputDecoration(labelText: AppLocalizations.of(context)!.email),
+              style: TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: AppLocalizations.of(context)!.email,
+                filled: true,
+                fillColor: Colors.green.withOpacity(0.2),
+                border: OutlineInputBorder(
+                  borderSide: BorderSide.none,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
             ),
 
             SizedBox(height: 16),
@@ -137,7 +157,16 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
             // Password TextField
             TextField(
               controller: _passwordController,
-              decoration: InputDecoration(labelText: AppLocalizations.of(context)!.password),
+              decoration: InputDecoration(
+                hintText: AppLocalizations.of(context)!.password,
+                hintStyle: TextStyle(color: Colors.white),
+                filled: true,
+                fillColor: Colors.green.withOpacity(0.2),
+                border: OutlineInputBorder(
+                  borderSide: BorderSide.none,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
               obscureText: true,
             ),
 
@@ -146,14 +175,15 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
             // Update Button
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xff26B6E1),
+                backgroundColor: Colors.green,
               ),
               onPressed: _updateUserData,
-              child: Text(AppLocalizations.of(context)!.update),
+              child: Text(AppLocalizations.of(context)!.update, style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
       ),
+      backgroundColor: Color(0xff262930),
     );
   }
 }

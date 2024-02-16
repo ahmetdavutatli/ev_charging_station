@@ -134,8 +134,11 @@ class _MyCarsPageState extends State<MyCarsPage> {
     return Scaffold(
       drawer: NavBar(auth: Auth()),
       appBar: AppBar(
-        backgroundColor: const Color(0xff26B6E1),
+        centerTitle: true,
+        title: Image.asset('assets/logo.png', height: 60, width: 60),
+        backgroundColor: Colors.green,
       ),
+      backgroundColor: Color(0xff262930),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ChangeNotifierProvider<ChargeState>(
@@ -149,11 +152,21 @@ class _MyCarsPageState extends State<MyCarsPage> {
                   itemCount: _userCars.length,
                   itemBuilder: (context, index) {
                     return Card(
+                      color: Color(0xff262930),
                       child: ListTile(
-                        title: Text(_userCars[index]['name']),
+                        title: Text(
+                          _userCars[index]['name'],
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         subtitle: Text(
                           '${AppLocalizations.of(context)!.initialCharge}: ${_userCars[index]['initialCharge'].toString()}%' +
                               '\n${AppLocalizations.of(context)!.remainingCharge}: ${_userCars[index]['remainingCharge'].toString()}%',
+                          style: TextStyle(
+                            color: Colors.white,
+                          ),
                         ),
                         trailing: ElevatedButton(
                           onPressed: () {
@@ -161,9 +174,7 @@ class _MyCarsPageState extends State<MyCarsPage> {
                             _toggleChooseCar(index);
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: selectedCar.selectedCarIndex == index
-                                ? Colors.green
-                                : const Color(0xff26B6E1),
+                            primary: Colors.transparent, // Set to transparent
                           ),
                           child: Text(
                             selectedCar.selectedCarIndex == index
@@ -171,29 +182,37 @@ class _MyCarsPageState extends State<MyCarsPage> {
                                 : 'Choose Car',
                             style: TextStyle(
                               color: selectedCar.selectedCarIndex == index
-                                  ? Colors.white
-                                  : null,
+                                  ? Colors.green
+                                  : Colors.white,
                             ),
                           ),
                         ),
-                        tileColor: selectedCar.selectedCarIndex == index
-                            ? Colors.green
-                            : null, // Highlight the selected car
                       ),
                     );
+
                   },
                 ),
               )
-                  : Text(AppLocalizations.of(context)!.carCheck),
+                  : Text(
+                AppLocalizations.of(context)!.carCheck,
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
               SizedBox(height: 16),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xff26B6E1),
+                  backgroundColor: Colors.green,
                 ),
                 onPressed: () {
                   _showAddCarDialog();
                 },
-                child: Text(AppLocalizations.of(context)!.addCar),
+                child: Text(
+                  AppLocalizations.of(context)!.addCar,
+                  style: TextStyle(
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ],
           ),
@@ -230,28 +249,47 @@ class _MyCarsPageState extends State<MyCarsPage> {
     }
   }
 
-
-
   void _showAddCarDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Add a New Car'),
-          content: Text('Do you want to add a new car?'),
+          title: Text(
+            'Add a New Car',
+            style: TextStyle(
+              color: Colors.white,
+            ),
+          ),
+          content: Text(
+            'Do you want to add a new car?',
+            style: TextStyle(
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: Color(0xff262930),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('Cancel'),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
             ),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
                 _navigateToAddCarPage();
               },
-              child: Text('Add Car'),
+              child: Text(
+                'Add Car',
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
             ),
           ],
         );

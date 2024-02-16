@@ -1,3 +1,4 @@
+import 'package:ev_charging_station/global_stations.dart';
 import 'package:ev_charging_station/pages/login_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';

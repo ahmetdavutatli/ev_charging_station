@@ -156,7 +156,7 @@ class NavBar extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => const TransactionPage()),
+                                builder: (context) => TransactionPage()),
                           );
                         },
                         contentPadding: EdgeInsets.symmetric(horizontal: 16.0),

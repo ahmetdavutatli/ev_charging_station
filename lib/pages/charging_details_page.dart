@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../models/station_model.dart';
 import '../selected_car.dart';
 import '../auth.dart';
+import 'transaction_page.dart';
 
 class ChargingDetailsPage extends StatefulWidget {
   final Station station;
@@ -21,9 +22,10 @@ class _ChargingDetailsPageState extends State<ChargingDetailsPage> {
   late Timer _chargingTimer;
   int remainingCharge = 0;
   bool isChargingStopped = false;
-  bool isUpdatingCharge = false;
   double walletBalance = 0;
   double fee = 1.2;
+
+  DateTime? chargingStartTime; // Added to track the charging start time
 
   @override
   void initState() {
@@ -43,7 +45,8 @@ class _ChargingDetailsPageState extends State<ChargingDetailsPage> {
     String? userId = FirebaseAuth.instance.currentUser?.uid;
 
     if (userId != null) {
-      DocumentSnapshot walletSnapshot = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+      DocumentSnapshot walletSnapshot =
+      await FirebaseFirestore.instance.collection('users').doc(userId).get();
 
       if (walletSnapshot.exists) {
         final walletData = walletSnapshot.data() as Map<String, dynamic>?;
@@ -64,6 +67,11 @@ class _ChargingDetailsPageState extends State<ChargingDetailsPage> {
     // Initialize the timer to simulate the charging process
     const chargingInterval = const Duration(seconds: 5);
     _chargingTimer = Timer.periodic(chargingInterval, (timer) {
+      // Track the charging start time
+      if (chargingStartTime == null) {
+        chargingStartTime = DateTime.now();
+      }
+
       // Increment the remaining charge for the selected car
       if (!isChargingStopped) {
         increaseRemainingCharge();
@@ -71,22 +79,16 @@ class _ChargingDetailsPageState extends State<ChargingDetailsPage> {
     });
   }
 
-  void stopCharging() {
+  void endCharging() {
     setState(() {
       isChargingStopped = true;
     });
 
     // Calculate charging cost and deduct from wallet balance
     calculateAndDeductCost();
-  }
 
-  void resumeCharging() {
-    setState(() {
-      isChargingStopped = false;
-    });
-
-    // Resume charging process
-    startCharging();
+    // Create a transaction field in the user database and navigate to ChargingPage
+    createTransaction();
   }
 
   void calculateAndDeductCost() async {
@@ -118,7 +120,6 @@ class _ChargingDetailsPageState extends State<ChargingDetailsPage> {
   }
 
   void increaseRemainingCharge() async {
-
     if (!mounted) {
       // The widget is no longer in the widget tree, avoid state changes
       return;
@@ -175,12 +176,52 @@ class _ChargingDetailsPageState extends State<ChargingDetailsPage> {
     }
   }
 
+  void createTransaction() async {
+    String? userId = FirebaseAuth.instance.currentUser?.uid;
+
+    if (userId != null && chargingStartTime != null) {
+      // Get the current date and time
+      DateTime now = DateTime.now();
+
+      // Calculate the seconds charged
+      int secondsCharged = now.difference(chargingStartTime!).inSeconds;
+
+      // Get the selected car data
+      SelectedCar selectedCar = Provider.of<SelectedCar>(context, listen: false);
+      Map<String, dynamic>? carData = selectedCar.selectedCarIndex != null
+          ? selectedCar.userCars[selectedCar.selectedCarIndex!]
+          : null;
+
+      if (carData != null) {
+        // Create a transaction data object
+        Map<String, dynamic> transactionData = {
+          'selected_car_name': carData['name'],
+          'charging_cost': fee * (secondsCharged / 5), // Assuming fee is per 5 seconds
+          'station_address': widget.station.address,
+          'station_name': widget.station.name,
+          'seconds_charged': secondsCharged,
+          'timestamp': now,
+        };
+
+        // Add the transaction data to the user's transactions list
+        await FirebaseFirestore.instance.collection('users').doc(userId).collection('transactions').add(transactionData);
+
+        // Navigate to the ChargingPage
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => TransactionPage()),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xff262930),
       appBar: AppBar(
-        title: Text('Charging Details'),
+        centerTitle: true,
+        title: Image.asset('assets/logo.png', height: 60, width: 60),
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -196,8 +237,7 @@ class _ChargingDetailsPageState extends State<ChargingDetailsPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             walletBalance >= 0
-                ? Text('Wallet Balance: \$${walletBalance.toStringAsFixed(2)}',
-                style: TextStyle(color: Colors.white))
+                ? Text('Wallet Balance: \$${walletBalance.toStringAsFixed(2)}', style: TextStyle(color: Colors.white))
                 : CircularProgressIndicator(),
             Text('Charging Details for ${widget.station.name}', style: TextStyle(color: Colors.white)),
             SizedBox(height: 20),
@@ -281,10 +321,12 @@ class _ChargingDetailsPageState extends State<ChargingDetailsPage> {
                   child: Text('Start Charging', style: TextStyle(fontSize: 16.0)),
                 ),
               ),
-              onPressed: isChargingStopped ? () {
+              onPressed: isChargingStopped
+                  ? () {
                 // Trigger the functionality to increase remaining charge and set isEmpty to false
                 increaseRemainingCharge();
-              } : null,
+              }
+                  : null,
             ),
             SizedBox(height: 20),
             MaterialButton(
@@ -301,31 +343,12 @@ class _ChargingDetailsPageState extends State<ChargingDetailsPage> {
                   width: MediaQuery.of(context).size.width * 0.5,
                   height: 50,
                   alignment: Alignment.center,
-                  child: Text('Stop Charging', style: TextStyle(fontSize: 16.0)),
+                  child: Text('End Charging', style: TextStyle(fontSize: 16.0)),
                 ),
               ),
-              onPressed: isChargingStopped ? null : stopCharging,
+              onPressed: isChargingStopped ? null : endCharging,
             ),
             SizedBox(height: 20),
-            MaterialButton(
-              child: Ink(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.orange, Colors.orangeAccent],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Container(
-                  width: MediaQuery.of(context).size.width * 0.5,
-                  height: 50,
-                  alignment: Alignment.center,
-                  child: Text('Resume Charging', style: TextStyle(fontSize: 16.0)),
-                ),
-              ),
-              onPressed: isChargingStopped ? resumeCharging : null,
-            ),
           ],
         ),
       ),

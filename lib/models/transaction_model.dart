@@ -1,23 +1,16 @@
-class Transaction {
-  final String id; // Unique identifier for the transaction
-  final String chargingStation;
-  final String date;
-  final double amount;
+class TransactionData {
+  final String StationName;
+  final String selectedCar;
+  final String stationAddress;
+  final int chargeDuration;
+  final double totalCost;
 
-  Transaction({
-    required this.id,
-    required this.chargingStation,
-    required this.date,
-    required this.amount,
+  TransactionData({
+    required this.StationName,
+    required this.selectedCar,
+    required this.stationAddress,
+    required this.chargeDuration,
+    required this.totalCost,
   });
-
-  // Factory method to create a Transaction object from Firestore data
-  factory Transaction.fromFirestore(Map<String, dynamic> data, String documentId) {
-    return Transaction(
-      id: documentId,
-      chargingStation: data['chargingStation'],
-      date: data['date'],
-      amount: data['amount'].toDouble(),
-    );
-  }
 }
+
