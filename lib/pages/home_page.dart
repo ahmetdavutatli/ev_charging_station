@@ -18,6 +18,9 @@ import '../selected_car.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+double globalLatitude = 39.9334;  // Default initial value
+double globalLongitude = 32.8597; // Default initial value
+
 class HomePage extends StatefulWidget {
 
   final Auth auth;
@@ -31,6 +34,9 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 1;
   late List<Widget> _pages;
+
+  late List<Station> stations;
+
 
   @override
   void initState() {
@@ -78,7 +84,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
-
 
 
 
@@ -168,30 +173,43 @@ class _HomePageContentState extends State<HomePageContent> {
     }
   }
 
-  Future<void> fetchEVChargingStations() async {
+  Future<List<Station>> fetchEVChargingStations(double latitude, double longitude) async {
     var url = Uri.parse('https://ev-charge-finder.p.rapidapi.com/search-by-coordinates-point')
         .replace(queryParameters: {
-      'lat': 'latitude.toString()',
-      'lng': 'longitude.toString()',
+      'lat': latitude.toString(),
+      'lng': longitude.toString(),
       'limit': '20'
     });
 
     try {
       var response = await http.get(url, headers: {
-        'X-RapidAPI-Key': '71c9bd1a78msh223538a1e2a0255p182e47jsnd60d91a90620',
+        'X-RapidAPI-Key': '5b44f04db6msh69e2aa11abca8ddp18d7aejsn22d8c20034ff',
         'X-RapidAPI-Host': 'ev-charge-finder.p.rapidapi.com'
       });
 
       if (response.statusCode == 200) {
+        print('Request successful.');
         var data = json.decode(response.body);
-        print(data);
+        List<Station> stations = (data['data'] as List).map((station) {
+          return Station(
+            id: station['id'],
+            name: station['name'],
+            latitude: station['latitude'],
+            longitude: station['longitude'],
+            address: station['formatted_address'],
+          );
+        }).toList();
+        return stations;
       } else {
         print('Request failed with status: ${response.statusCode}.');
+        return [];
       }
     } catch (error) {
       print('An error occurred: $error');
+      return [];
     }
   }
+
 
   void _focusOnStation(Station station) {
     if (_mapController != null) {
@@ -211,6 +229,9 @@ class _HomePageContentState extends State<HomePageContent> {
     try {
       var location = await _location.getLocation();
       _moveToCurrentLocation(location.latitude!, location.longitude!);
+      globalLatitude = location.latitude!;
+      globalLongitude = location.longitude!;
+
     } catch (e) {
       print('Error getting location: $e');
     }
@@ -261,7 +282,7 @@ class _HomePageContentState extends State<HomePageContent> {
               ),
               SizedBox(height: 8),
               Text(
-                '${AppLocalizations.of(context)!.stationLocation}: ${station.latitude}, ${station.longitude}',
+                '${AppLocalizations.of(context)!.stationLocation}: ${station.address}',
                 style: TextStyle(fontSize: 18, color: Colors.white),
               ),
               Spacer(), // Push the button to the bottom
@@ -298,8 +319,6 @@ class _HomePageContentState extends State<HomePageContent> {
 
 
 
-
-
   Future<void> _loadStations() async {
     // _mapController kontrolü
     if (_mapController == null) {
@@ -310,7 +329,6 @@ class _HomePageContentState extends State<HomePageContent> {
     // Get user's current location
     var location = await _location.getLocation();
     LatLng userLocation = LatLng(location.latitude!, location.longitude!);
-
 
     List<Marker> markers = [];
 
@@ -325,17 +343,30 @@ class _HomePageContentState extends State<HomePageContent> {
     );
     markers.add(userMarker);
 
-
     // Marker'ları oluştur
-    List<Station> stations = await _stationService.getStations();
-    markers.addAll(stations.data.map((station) {
-      return Marker(
-        markerId: MarkerId(station.id),
-        position: LatLng(station.latitude, station.longitude),
-        icon: markerIconStation,
-        onTap: () => _showBottomSheet(station: station),
-      );
-    }));
+    Future<void> _createMarkers() async {
+      try {
+        List<Station> stations = await fetchEVChargingStations(globalLatitude, globalLongitude);
+
+        var markers = stations.map((station) {
+          return Marker(
+            markerId: MarkerId(station.id),
+            position: LatLng(station.latitude, station.longitude),
+            icon: markerIconStation,
+            onTap: () => _showBottomSheet(station: station),
+          );
+        }).toList();
+
+        setState(() {
+          _markers.addAll(markers);
+        });
+      } catch (e) {
+        // Handle any errors here
+        print('Error creating markers: $e');
+      }
+    }
+    // Marker'ları oluştur
+    _createMarkers();
 
     // Marker'ları güncelle
     setState(() {

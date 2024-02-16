@@ -23,6 +23,7 @@ class _ChargingDetailsPageState extends State<ChargingDetailsPage> {
   bool isChargingStopped = false;
   bool isUpdatingCharge = false;
   double walletBalance = 0;
+  double fee = 1.2;
 
   @override
   void initState() {
@@ -90,7 +91,7 @@ class _ChargingDetailsPageState extends State<ChargingDetailsPage> {
 
   void calculateAndDeductCost() async {
     // Calculate charging cost based on station's fee and time passed
-    double chargingCost = (widget.station.fee * (_chargingTimer.tick ~/ 5)); // Assuming fee is per 5 seconds
+    double chargingCost = (fee * (_chargingTimer.tick ~/ 5)); // Assuming fee is per 5 seconds
 
     // Deduct charging cost from wallet balance
     if (walletBalance >= chargingCost) {
@@ -152,7 +153,7 @@ class _ChargingDetailsPageState extends State<ChargingDetailsPage> {
                 double walletBalance = userData['wallet_balance'] ?? 0;
 
                 // Calculate and deduct the charging cost
-                double chargingCost = (widget.station.fee * (_chargingTimer.tick ~/ 5));
+                double chargingCost = (fee * (_chargingTimer.tick ~/ 5));
                 double newWalletBalance = walletBalance - chargingCost;
 
                 // Update user data
